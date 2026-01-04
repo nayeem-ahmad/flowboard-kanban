@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FlowBoard - A modern Kanban board application for managing your projects and tasks efficiently.">
+    <title>FlowBoard - Modern Kanban Board</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="7" height="7" rx="2" fill="currentColor"/>
+                    <rect x="14" y="3" width="7" height="7" rx="2" fill="currentColor" opacity="0.7"/>
+                    <rect x="3" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.5"/>
+                    <rect x="14" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.3"/>
+                </svg>
+                <span class="logo-text">FlowBoard</span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="board-selector">
+                <button class="board-selector-btn" id="boardSelectorBtn">
+                    <span id="currentBoardName">My Project Board</span>
+                    <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <div class="board-dropdown" id="boardDropdown">
+                    <div class="dropdown-header">Your Boards</div>
+                    <div class="board-list" id="boardList"></div>
+                    <div class="dropdown-divider"></div>
+                    <button class="create-board-btn" id="createBoardBtn">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Create new board
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="header-btn" id="searchBtn" title="Search">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                    <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+            <button class="header-btn" id="themeToggle" title="Toggle theme">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <div class="user-avatar" title="User">
+                <span>U</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Modal -->
+    <div class="modal-overlay" id="searchModal">
+        <div class="search-modal">
+            <div class="search-input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                    <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Search cards..." autocomplete="off">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="search-results" id="searchResults">
+                <div class="search-empty">Start typing to search cards...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Board Creation Modal -->
+    <div class="modal-overlay" id="boardModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Create New Board</h2>
+                <button class="modal-close" id="closeBoardModal">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="boardName">Board Name</label>
+                    <input type="text" id="boardName" placeholder="Enter board name..." class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Background Color</label>
+                    <div class="color-picker">
+                        <button class="color-option selected" data-color="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></button>
+                        <button class="color-option" data-color="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"></button>
+                        <button class="color-option" data-color="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"></button>
+                        <button class="color-option" data-color="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"></button>
+                        <button class="color-option" data-color="linear-gradient(135deg, #fa709a 0%, #fee140 100%)" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%)"></button>
+                        <button class="color-option" data-color="linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelBoardBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveBoardBtn">Create Board</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Modal -->
+    <div class="modal-overlay" id="cardModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <div class="card-modal-title">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M7 9H17M7 13H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <input type="text" id="cardTitle" class="card-title-input" placeholder="Card title...">
+                </div>
+                <button class="modal-close" id="closeCardModal">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body card-modal-body">
+                <div class="card-main-content">
+                    <div class="card-section">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 6H20M4 12H20M4 18H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            Description
+                        </h3>
+                        <textarea id="cardDescription" class="card-description" placeholder="Add a more detailed description..."></textarea>
+                    </div>
+                    <div class="card-section">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            Checklist
+                        </h3>
+                        <div class="checklist" id="checklist"></div>
+                        <div class="add-checklist-item">
+                            <input type="text" id="newChecklistItem" placeholder="Add an item..." class="form-input">
+                            <button class="btn btn-sm btn-primary" id="addChecklistItemBtn">Add</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-sidebar">
+                    <div class="sidebar-section">
+                        <h4>Labels</h4>
+                        <div class="label-picker" id="labelPicker">
+                            <button class="label-option" data-label="priority-high" data-color="#ef4444">
+                                <span class="label-color" style="background: #ef4444"></span>
+                                High Priority
+                            </button>
+                            <button class="label-option" data-label="priority-medium" data-color="#f59e0b">
+                                <span class="label-color" style="background: #f59e0b"></span>
+                                Medium Priority
+                            </button>
+                            <button class="label-option" data-label="priority-low" data-color="#22c55e">
+                                <span class="label-color" style="background: #22c55e"></span>
+                                Low Priority
+                            </button>
+                            <button class="label-option" data-label="bug" data-color="#dc2626">
+                                <span class="label-color" style="background: #dc2626"></span>
+                                Bug
+                            </button>
+                            <button class="label-option" data-label="feature" data-color="#8b5cf6">
+                                <span class="label-color" style="background: #8b5cf6"></span>
+                                Feature
+                            </button>
+                            <button class="label-option" data-label="improvement" data-color="#06b6d4">
+                                <span class="label-color" style="background: #06b6d4"></span>
+                                Improvement
+                            </button>
+                        </div>
+                    </div>
+                    <div class="sidebar-section">
+                        <h4>Due Date</h4>
+                        <input type="date" id="cardDueDate" class="form-input">
+                    </div>
+                    <div class="sidebar-section">
+                        <h4>Actions</h4>
+                        <button class="action-btn" id="duplicateCardBtn">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+                                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            Duplicate
+                        </button>
+                        <button class="action-btn danger" id="deleteCardBtn">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelCardBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveCardBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Board Area -->
+    <main class="board-container" id="boardContainer">
+        <div class="board" id="board">
+            <!-- Lists will be dynamically added here -->
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
