@@ -1,7 +1,41 @@
-// FlowBoard - Trello-like Kanban Board Application
-// ================================================
+// FlowBoard - Trello-like Kanban Board Application with Firebase
+// =============================================================
 
-// Utility Functions
+// ================================
+// FIREBASE CONFIGURATION
+// ================================
+// Firebase configuration for FlowBoard (using ai-readiness-checker project)
+const firebaseConfig = {
+    apiKey: "AIzaSyBdELEner5sCFYtjGfFsdcC-KuPazi274k",
+    authDomain: "ai-readiness-checker.firebaseapp.com",
+    projectId: "ai-readiness-checker",
+    storageBucket: "ai-readiness-checker.firebasestorage.app",
+    messagingSenderId: "409159590979",
+    appId: "1:409159590979:web:240e5c9aa1ca66df0c20f6",
+    measurementId: "G-7VNRTPS9NT"
+};
+
+// Initialize Firebase
+let auth, db;
+let isFirebaseConfigured = false;
+
+try {
+    if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        isFirebaseConfigured = true;
+    } else {
+        console.warn('⚠️ Firebase not configured. Using localStorage fallback.');
+        console.info('To enable cloud sync and authentication, replace the firebaseConfig in app.js with your Firebase project credentials.');
+    }
+} catch (error) {
+    console.error('Firebase initialization error:', error);
+}
+
+// ================================
+// UTILITY FUNCTIONS
+// ================================
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
 // Toast Notifications
@@ -9,7 +43,7 @@ const showToast = (message, type = 'info') => {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    
+
     const icons = {
         success: '<path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 4L12 14.01l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
         error: '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M15 9L9 15M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
@@ -33,14 +67,20 @@ const removeToast = (toast) => {
     setTimeout(() => toast.remove(), 300);
 };
 
-// Data Store
+// ================================
+// DATA STORE
+// ================================
 let state = {
     boards: [],
     currentBoardId: null,
     editingCard: null
 };
 
-// Initialize with sample data
+let currentUser = null;
+
+// ================================
+// SAMPLE DATA
+// ================================
 const initializeSampleData = () => {
     const sampleBoard = {
         id: generateId(),
@@ -86,12 +126,46 @@ const initializeSampleData = () => {
     state.currentBoardId = sampleBoard.id;
 };
 
-// LocalStorage
-const saveState = () => {
+// ================================
+// DATA PERSISTENCE (Firestore + LocalStorage Fallback)
+// ================================
+const saveState = async () => {
+    // Always save to localStorage as backup
     localStorage.setItem('flowboard-state', JSON.stringify(state));
+
+    // If Firebase is configured and user is logged in, save to Firestore
+    if (isFirebaseConfigured && currentUser) {
+        try {
+            await db.collection('users').doc(currentUser.uid).set({
+                boards: state.boards,
+                currentBoardId: state.currentBoardId,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        } catch (error) {
+            console.error('Error saving to Firestore:', error);
+            showToast('Failed to sync to cloud', 'warning');
+        }
+    }
 };
 
-const loadState = () => {
+const loadState = async () => {
+    // If Firebase is configured and user is logged in, load from Firestore
+    if (isFirebaseConfigured && currentUser) {
+        try {
+            const doc = await db.collection('users').doc(currentUser.uid).get();
+            if (doc.exists) {
+                const data = doc.data();
+                state.boards = data.boards || [];
+                state.currentBoardId = data.currentBoardId;
+                if (!state.boards.length) initializeSampleData();
+                return;
+            }
+        } catch (error) {
+            console.error('Error loading from Firestore:', error);
+        }
+    }
+
+    // Fallback to localStorage
     const saved = localStorage.getItem('flowboard-state');
     if (saved) {
         state = JSON.parse(saved);
@@ -101,10 +175,327 @@ const loadState = () => {
     }
 };
 
-// Get current board
+// ================================
+// AUTHENTICATION
+// ================================
+const loadingScreen = document.getElementById('loadingScreen');
+const authScreen = document.getElementById('authScreen');
+const headerElement = document.querySelector('.header');
+const boardContainer = document.querySelector('.board-container');
+const userAvatar = document.querySelector('.user-avatar');
+const userMenu = document.getElementById('userMenu');
+
+// Auth forms
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const resetForm = document.getElementById('resetForm');
+
+// Switch between login/register tabs
+document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        if (tab.dataset.tab === 'login') {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+            resetForm.classList.add('hidden');
+        } else {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            resetForm.classList.add('hidden');
+        }
+    });
+});
+
+// Forgot password link
+document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    loginForm.classList.add('hidden');
+    registerForm.classList.add('hidden');
+    resetForm.classList.remove('hidden');
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+});
+
+// Back to login link
+document.getElementById('backToLoginLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    loginForm.classList.remove('hidden');
+    registerForm.classList.add('hidden');
+    resetForm.classList.add('hidden');
+    document.querySelector('.auth-tab[data-tab="login"]').classList.add('active');
+});
+
+// Helper function for form loading state
+const setFormLoading = (form, loading) => {
+    const btn = form.querySelector('.btn-block');
+    if (loading) {
+        btn.classList.add('loading');
+        btn.disabled = true;
+    } else {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+    }
+};
+
+// Email/Password Login
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!isFirebaseConfigured) {
+        showToast('Firebase not configured. Please set up Firebase first.', 'error');
+        return;
+    }
+
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    setFormLoading(loginForm, true);
+
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        showToast('Welcome back!', 'success');
+    } catch (error) {
+        console.error('Login error:', error);
+        let message = 'Failed to sign in';
+        switch (error.code) {
+            case 'auth/user-not-found':
+                message = 'No account found with this email';
+                break;
+            case 'auth/wrong-password':
+                message = 'Incorrect password';
+                break;
+            case 'auth/invalid-email':
+                message = 'Invalid email address';
+                break;
+            case 'auth/too-many-requests':
+                message = 'Too many attempts. Please try again later';
+                break;
+        }
+        showToast(message, 'error');
+    } finally {
+        setFormLoading(loginForm, false);
+    }
+});
+
+// Email/Password Registration
+registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!isFirebaseConfigured) {
+        showToast('Firebase not configured. Please set up Firebase first.', 'error');
+        return;
+    }
+
+    const name = document.getElementById('registerName').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+
+    setFormLoading(registerForm, true);
+
+    try {
+        const result = await auth.createUserWithEmailAndPassword(email, password);
+        await result.user.updateProfile({ displayName: name });
+        showToast('Account created successfully!', 'success');
+    } catch (error) {
+        console.error('Registration error:', error);
+        let message = 'Failed to create account';
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                message = 'An account with this email already exists';
+                break;
+            case 'auth/weak-password':
+                message = 'Password should be at least 6 characters';
+                break;
+            case 'auth/invalid-email':
+                message = 'Invalid email address';
+                break;
+        }
+        showToast(message, 'error');
+    } finally {
+        setFormLoading(registerForm, false);
+    }
+});
+
+// Password Reset
+resetForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!isFirebaseConfigured) {
+        showToast('Firebase not configured. Please set up Firebase first.', 'error');
+        return;
+    }
+
+    const email = document.getElementById('resetEmail').value;
+
+    setFormLoading(resetForm, true);
+
+    try {
+        await auth.sendPasswordResetEmail(email);
+        showToast('Password reset email sent! Check your inbox.', 'success');
+        // Go back to login form
+        document.getElementById('backToLoginLink').click();
+    } catch (error) {
+        console.error('Password reset error:', error);
+        let message = 'Failed to send reset email';
+        if (error.code === 'auth/user-not-found') {
+            message = 'No account found with this email';
+        }
+        showToast(message, 'error');
+    } finally {
+        setFormLoading(resetForm, false);
+    }
+});
+
+// Google Sign-In
+document.getElementById('googleSignIn').addEventListener('click', async () => {
+    if (!isFirebaseConfigured) {
+        showToast('Firebase not configured. Please set up Firebase first.', 'error');
+        return;
+    }
+
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await auth.signInWithPopup(provider);
+        showToast('Signed in with Google!', 'success');
+    } catch (error) {
+        console.error('Google sign-in error:', error);
+        if (error.code !== 'auth/popup-closed-by-user') {
+            showToast('Failed to sign in with Google', 'error');
+        }
+    }
+});
+
+// GitHub Sign-In
+document.getElementById('githubSignIn').addEventListener('click', async () => {
+    if (!isFirebaseConfigured) {
+        showToast('Firebase not configured. Please set up Firebase first.', 'error');
+        return;
+    }
+
+    try {
+        const provider = new firebase.auth.GithubAuthProvider();
+        await auth.signInWithPopup(provider);
+        showToast('Signed in with GitHub!', 'success');
+    } catch (error) {
+        console.error('GitHub sign-in error:', error);
+        if (error.code !== 'auth/popup-closed-by-user') {
+            if (error.code === 'auth/account-exists-with-different-credential') {
+                showToast('An account already exists with this email', 'error');
+            } else {
+                showToast('Failed to sign in with GitHub', 'error');
+            }
+        }
+    }
+});
+
+// User Menu Toggle
+userAvatar.addEventListener('click', (e) => {
+    e.stopPropagation();
+    userMenu.classList.toggle('active');
+});
+
+document.addEventListener('click', (e) => {
+    if (!userMenu.contains(e.target) && !userAvatar.contains(e.target)) {
+        userMenu.classList.remove('active');
+    }
+});
+
+// Sign Out
+document.getElementById('signOutBtn').addEventListener('click', async () => {
+    if (isFirebaseConfigured) {
+        try {
+            await auth.signOut();
+            showToast('Signed out successfully', 'info');
+        } catch (error) {
+            console.error('Sign out error:', error);
+        }
+    }
+    userMenu.classList.remove('active');
+});
+
+// Update UI for authenticated user
+const updateUserUI = (user) => {
+    const avatarEl = document.querySelector('.user-avatar');
+    const menuAvatarEl = document.getElementById('userMenuAvatar');
+    const menuNameEl = document.getElementById('userMenuName');
+    const menuEmailEl = document.getElementById('userMenuEmail');
+
+    if (user) {
+        // User is signed in
+        const displayName = user.displayName || 'User';
+        const email = user.email || '';
+        const photoURL = user.photoURL;
+        const initial = displayName.charAt(0).toUpperCase();
+
+        if (photoURL) {
+            avatarEl.innerHTML = `<img src="${photoURL}" alt="${displayName}">`;
+            menuAvatarEl.innerHTML = `<img src="${photoURL}" alt="${displayName}">`;
+        } else {
+            avatarEl.innerHTML = `<span>${initial}</span>`;
+            menuAvatarEl.innerHTML = `<span>${initial}</span>`;
+        }
+
+        menuNameEl.textContent = displayName;
+        menuEmailEl.textContent = email;
+    } else {
+        // User is signed out
+        avatarEl.innerHTML = '<span>U</span>';
+    }
+};
+
+// Auth state observer
+const initAuth = () => {
+    if (isFirebaseConfigured) {
+        auth.onAuthStateChanged(async (user) => {
+            currentUser = user;
+
+            if (user) {
+                // User is signed in
+                updateUserUI(user);
+
+                // Load user's data
+                await loadState();
+
+                // Show main app, hide auth
+                loadingScreen.classList.add('hidden');
+                authScreen.classList.add('hidden');
+                headerElement.classList.remove('hidden');
+                boardContainer.classList.remove('hidden');
+
+                // Initialize theme and render
+                initTheme();
+                renderBoard();
+            } else {
+                // User is signed out
+                loadingScreen.classList.add('hidden');
+                authScreen.classList.remove('hidden');
+                headerElement.classList.add('hidden');
+                boardContainer.classList.add('hidden');
+            }
+        });
+    } else {
+        // Firebase not configured - skip auth and use localStorage
+        loadingScreen.classList.add('hidden');
+        authScreen.classList.add('hidden');
+        headerElement.classList.remove('hidden');
+        boardContainer.classList.remove('hidden');
+
+        // Load from localStorage
+        loadState();
+        initTheme();
+        renderBoard();
+    }
+};
+
+// ================================
+// GET CURRENT BOARD
+// ================================
 const getCurrentBoard = () => state.boards.find(b => b.id === state.currentBoardId);
 
-// DOM Elements
+// ================================
+// DOM ELEMENTS
+// ================================
 const boardElement = document.getElementById('board');
 const boardSelectorBtn = document.getElementById('boardSelectorBtn');
 const boardSelector = boardSelectorBtn.parentElement;
@@ -119,7 +510,9 @@ const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
 const themeToggle = document.getElementById('themeToggle');
 
-// Theme Toggle
+// ================================
+// THEME TOGGLE
+// ================================
 const initTheme = () => {
     const saved = localStorage.getItem('flowboard-theme');
     if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -133,7 +526,9 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('flowboard-theme', isDark ? 'light' : 'dark');
 });
 
-// Board Selector
+// ================================
+// BOARD SELECTOR
+// ================================
 boardSelectorBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     boardSelector.classList.toggle('active');
@@ -164,7 +559,9 @@ const renderBoardList = () => {
     });
 };
 
-// Board Modal
+// ================================
+// BOARD MODAL
+// ================================
 createBoardBtn.addEventListener('click', () => {
     boardModal.classList.add('active');
     document.getElementById('boardName').value = '';
@@ -184,7 +581,7 @@ document.querySelectorAll('.color-option').forEach(option => {
 document.getElementById('saveBoardBtn').addEventListener('click', () => {
     const name = document.getElementById('boardName').value.trim();
     const color = document.querySelector('.color-option.selected').dataset.color;
-    
+
     if (!name) {
         document.getElementById('boardName').classList.add('shake');
         setTimeout(() => document.getElementById('boardName').classList.remove('shake'), 500);
@@ -206,7 +603,9 @@ document.getElementById('saveBoardBtn').addEventListener('click', () => {
     showToast('Board created successfully!', 'success');
 });
 
-// Search
+// ================================
+// SEARCH
+// ================================
 document.getElementById('searchBtn').addEventListener('click', () => {
     searchModal.classList.add('active');
     searchInput.focus();
@@ -277,7 +676,9 @@ searchInput.addEventListener('input', (e) => {
     });
 });
 
-// Render Board
+// ================================
+// RENDER BOARD
+// ================================
 const renderBoard = () => {
     const board = getCurrentBoard();
     if (!board) return;
@@ -346,7 +747,9 @@ const renderBoard = () => {
     initDragAndDrop();
 };
 
-// Create List Element
+// ================================
+// CREATE LIST ELEMENT
+// ================================
 const createListElement = (list) => {
     const board = getCurrentBoard();
     const listEl = document.createElement('div');
@@ -404,7 +807,7 @@ const createListElement = (list) => {
     // List menu
     const menuBtn = listEl.querySelector('.list-menu-btn');
     const menu = listEl.querySelector('.list-menu');
-    
+
     menuBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         document.querySelectorAll('.list-menu.active').forEach(m => m.classList.remove('active'));
@@ -483,7 +886,9 @@ const createListElement = (list) => {
     return listEl;
 };
 
-// Create Card Element
+// ================================
+// CREATE CARD ELEMENT
+// ================================
 const createCardElement = (card, listId) => {
     const cardEl = document.createElement('div');
     cardEl.className = 'card';
@@ -535,12 +940,14 @@ const createCardElement = (card, listId) => {
     return cardEl;
 };
 
-// Card Modal
+// ================================
+// CARD MODAL
+// ================================
 const openCardModal = (cardId, listId) => {
     const board = getCurrentBoard();
     const list = board.lists.find(l => l.id === listId);
     const card = list.cards.find(c => c.id === cardId);
-    
+
     state.editingCard = { cardId, listId };
 
     document.getElementById('cardTitle').value = card.title;
@@ -570,7 +977,7 @@ const renderChecklist = (card) => {
 
     container.querySelectorAll('.checklist-item').forEach(itemEl => {
         const itemId = itemEl.dataset.itemId;
-        
+
         itemEl.querySelector('.checklist-checkbox').addEventListener('change', (e) => {
             const item = card.checklist.find(i => i.id === itemId);
             item.completed = e.target.checked;
@@ -638,7 +1045,7 @@ document.getElementById('duplicateCardBtn').addEventListener('click', () => {
     newCard.id = generateId();
     newCard.title = `${card.title} (copy)`;
     newCard.checklist.forEach(i => i.id = generateId());
-    
+
     list.cards.splice(list.cards.indexOf(card) + 1, 0, newCard);
     saveState();
     renderBoard();
@@ -659,7 +1066,9 @@ document.getElementById('deleteCardBtn').addEventListener('click', () => {
     showToast('Card deleted!', 'success');
 });
 
-// Drag and Drop
+// ================================
+// DRAG AND DROP
+// ================================
 let draggedCard = null;
 let draggedList = null;
 
@@ -692,16 +1101,16 @@ const handleCardDragEnd = (e) => {
 const handleCardDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    
+
     const container = e.currentTarget;
     const afterElement = getDragAfterElement(container, e.clientY);
-    
+
     // Remove existing placeholders
     document.querySelectorAll('.card-placeholder').forEach(p => p.remove());
-    
+
     const placeholder = document.createElement('div');
     placeholder.className = 'card-placeholder';
-    
+
     if (afterElement) {
         container.insertBefore(placeholder, afterElement);
     } else {
@@ -717,30 +1126,30 @@ const handleCardDragLeave = (e) => {
 
 const handleCardDrop = (e) => {
     e.preventDefault();
-    
+
     const targetListId = e.currentTarget.dataset.listId;
     const cardId = draggedCard.dataset.cardId;
     const sourceListId = draggedCard.closest('.list').dataset.listId;
-    
+
     const board = getCurrentBoard();
     const sourceList = board.lists.find(l => l.id === sourceListId);
     const targetList = board.lists.find(l => l.id === targetListId);
-    
+
     const cardIndex = sourceList.cards.findIndex(c => c.id === cardId);
     const [card] = sourceList.cards.splice(cardIndex, 1);
-    
+
     const afterElement = getDragAfterElement(e.currentTarget, e.clientY);
     let insertIndex;
-    
+
     if (afterElement) {
         const afterCardId = afterElement.dataset.cardId;
         insertIndex = targetList.cards.findIndex(c => c.id === afterCardId);
     } else {
         insertIndex = targetList.cards.length;
     }
-    
+
     targetList.cards.splice(insertIndex, 0, card);
-    
+
     document.querySelectorAll('.card-placeholder').forEach(p => p.remove());
     saveState();
     renderBoard();
@@ -748,11 +1157,11 @@ const handleCardDrop = (e) => {
 
 const getDragAfterElement = (container, y) => {
     const elements = [...container.querySelectorAll('.card:not(.dragging)')];
-    
+
     return elements.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
-        
+
         if (offset < 0 && offset > closest.offset) {
             return { offset, element: child };
         }
@@ -760,7 +1169,7 @@ const getDragAfterElement = (container, y) => {
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 };
 
-// Initialize
-loadState();
-initTheme();
-renderBoard();
+// ================================
+// INITIALIZE APP
+// ================================
+initAuth();
