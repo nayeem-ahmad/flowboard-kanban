@@ -1,1 +1,5 @@
-{"projects": {"default": "ai-readiness-checker"}}
+{
+  "projects": {
+    "default": "scrum71"
+  }
+}

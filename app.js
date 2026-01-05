@@ -4,15 +4,15 @@
 // ================================
 // FIREBASE CONFIGURATION
 // ================================
-// Firebase configuration for FlowBoard (using ai-readiness-checker project)
+// Firebase configuration for FlowBoard (using scrum71 project)
 const firebaseConfig = {
-    apiKey: "AIzaSyBdELEner5sCFYtjGfFsdcC-KuPazi274k",
-    authDomain: "ai-readiness-checker.firebaseapp.com",
-    projectId: "ai-readiness-checker",
-    storageBucket: "ai-readiness-checker.firebasestorage.app",
-    messagingSenderId: "409159590979",
-    appId: "1:409159590979:web:240e5c9aa1ca66df0c20f6",
-    measurementId: "G-7VNRTPS9NT"
+    apiKey: "AIzaSyAeW96tQLnWeqah7NO8zGOHlfi31nDHOQw",
+    authDomain: "scrum71.firebaseapp.com",
+    projectId: "scrum71",
+    storageBucket: "scrum71.firebasestorage.app",
+    messagingSenderId: "744464444206",
+    appId: "1:744464444206:web:77995ba24fce2e57a228bf",
+    measurementId: "G-KJF2BWTCWL"
 };
 
 // Initialize Firebase

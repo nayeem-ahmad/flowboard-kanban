@@ -1,16 +1,16 @@
 # Firebase Setup Guide for FlowBoard
 
-## ✅ Firebase is Already Configured!
+## ✅ Firebase is Configured for Project: scrum71
 
-This project is pre-configured with Firebase using the **ai-readiness-checker** project.
+This project is configured with Firebase using the **scrum71** project.
 
 ### Current Configuration
 
 | Setting | Value |
 |---------|-------|
-| **Project ID** | `ai-readiness-checker` |
-| **Auth Domain** | `ai-readiness-checker.firebaseapp.com` |
-| **App ID** | `1:409159590979:web:240e5c9aa1ca66df0c20f6` |
+| **Project ID** | `scrum71` |
+| **Auth Domain** | `scrum71.firebaseapp.com` |
+| **App ID** | `1:744464444206:web:77995ba24fce2e57a228bf` |
 
 ### Enabled Features
 
@@ -52,26 +52,12 @@ Just push your changes to the repository and GitHub Pages will automatically dep
 # View current project
 firebase projects:list
 
+# Switch to scrum71
+firebase use scrum71
+
 # Deploy Firestore rules
-firebase deploy --only firestore:rules --project ai-readiness-checker
-
-# Deploy everything (hosting + rules)
-firebase deploy --project ai-readiness-checker
+firebase deploy --only firestore:rules --project scrum71
 ```
-
----
-
-## GitHub Sign-In (Optional)
-
-To enable GitHub sign-in, you'll need to:
-
-1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
-2. Create a new OAuth App with:
-   - **Homepage URL**: `https://nayeem-ahmad.github.io/flowboard-kanban/`
-   - **Authorization callback URL**: `https://ai-readiness-checker.firebaseapp.com/__/auth/handler`
-3. Copy the Client ID and Client Secret
-4. Go to [Firebase Console > Authentication > Sign-in method](https://console.firebase.google.com/project/ai-readiness-checker/authentication/providers)
-5. Enable GitHub and paste the Client ID and Secret
 
 ---
 
@@ -89,18 +75,3 @@ service cloud.firestore {
   }
 }
 ```
-
----
-
-## Troubleshooting
-
-### "Firebase not configured" Warning
-If you see this warning in the console, the app is falling back to localStorage mode. Check that the Firebase config in `app.js` is correct.
-
-### Authentication Errors
-- Make sure the domain you're using is added to [Authorized domains](https://console.firebase.google.com/project/ai-readiness-checker/authentication/settings)
-- Clear browser cache and try again
-
-### Firestore Permission Denied
-- Check that you're signed in before reading/writing data
-- Verify the security rules are deployed: `firebase deploy --only firestore:rules`
