@@ -239,7 +239,18 @@ const loadState = async () => {
                     state.currentBoardId = state.boards[0].id;
                 }
             } else {
-                state.currentBoardId = null;
+                // User has no boards. 
+                // Check if they are here via an invite link
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('invite')) {
+                    // Do NOT create sample data. Let handleInviteLink populate the board.
+                    state.currentBoardId = null;
+                } else {
+                    // Normal new user? Create sample data
+                    initializeSampleData();
+                    // We should also save this new sample data to Firestore immediately so it persists
+                    saveState();
+                }
             }
             return;
         } catch (error) {
