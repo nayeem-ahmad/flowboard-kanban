@@ -1332,6 +1332,9 @@ const openProjectInfoModal = () => {
     // Render team members
     renderTeamMembers();
 
+    // Update invite link
+    updateInviteLinkInput();
+
     projectInfoModal.classList.add('active');
 };
 
@@ -1399,74 +1402,135 @@ const renderTeamMembers = () => {
     });
 };
 
-// Invite Member
-document.getElementById('inviteMemberBtn').addEventListener('click', () => {
-    inviteMember();
-});
+// ================================
+// INVITE LINK FUNCTIONALITY
+// ================================
 
-document.getElementById('inviteEmail').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        inviteMember();
+// Generate a unique invite token
+const generateInviteToken = () => {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
+// Get or create invite token for current board
+const getOrCreateInviteToken = () => {
+    const board = getCurrentBoard();
+    if (!board) return null;
+
+    if (!board.inviteToken) {
+        board.inviteToken = generateInviteToken();
+        saveState();
+    }
+
+    return board.inviteToken;
+};
+
+// Generate invite link
+const generateInviteLink = () => {
+    const board = getCurrentBoard();
+    if (!board) return '';
+
+    const token = getOrCreateInviteToken();
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?invite=${token}&board=${board.id}`;
+};
+
+// Update invite link input
+const updateInviteLinkInput = () => {
+    const inviteLinkInput = document.getElementById('inviteLinkInput');
+    if (inviteLinkInput) {
+        inviteLinkInput.value = generateInviteLink();
+    }
+};
+
+// Copy invite link to clipboard
+document.getElementById('copyInviteLinkBtn').addEventListener('click', async () => {
+    const inviteLinkInput = document.getElementById('inviteLinkInput');
+    const copyBtn = document.getElementById('copyInviteLinkBtn');
+    const copyIcon = document.getElementById('copyIcon');
+    const checkIcon = document.getElementById('checkIcon');
+    const copyBtnText = document.getElementById('copyBtnText');
+
+    try {
+        await navigator.clipboard.writeText(inviteLinkInput.value);
+
+        // Visual feedback
+        copyBtn.classList.add('copied');
+        copyIcon.classList.add('hidden');
+        checkIcon.classList.remove('hidden');
+        copyBtnText.textContent = 'Copied!';
+
+        showToast('Invite link copied to clipboard!', 'success');
+
+        // Reset after 2 seconds
+        setTimeout(() => {
+            copyBtn.classList.remove('copied');
+            copyIcon.classList.remove('hidden');
+            checkIcon.classList.add('hidden');
+            copyBtnText.textContent = 'Copy';
+        }, 2000);
+    } catch (err) {
+        // Fallback for older browsers
+        inviteLinkInput.select();
+        document.execCommand('copy');
+        showToast('Invite link copied to clipboard!', 'success');
     }
 });
 
-const inviteMember = () => {
-    const emailInput = document.getElementById('inviteEmail');
-    const email = emailInput.value.trim().toLowerCase();
-
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-        showToast('Please enter an email address', 'warning');
-        emailInput.focus();
-        return;
-    }
-
-    if (!emailRegex.test(email)) {
-        showToast('Please enter a valid email address', 'error');
-        emailInput.focus();
-        return;
-    }
-
+// Regenerate invite link
+document.getElementById('regenerateLinkBtn').addEventListener('click', () => {
     const board = getCurrentBoard();
     if (!board) return;
 
-    // Initialize members array if not exists
-    if (!board.members) {
-        board.members = [];
+    if (confirm('Generate a new invite link? The old link will no longer work.')) {
+        board.inviteToken = generateInviteToken();
+        saveState();
+        updateInviteLinkInput();
+        showToast('New invite link generated!', 'success');
+    }
+});
+
+// Handle joining via invite link
+const handleInviteLink = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteToken = urlParams.get('invite');
+    const boardId = urlParams.get('board');
+
+    if (!inviteToken || !boardId) return;
+
+    // Find the board with matching invite token
+    const board = state.boards.find(b => b.id === boardId && b.inviteToken === inviteToken);
+
+    if (board) {
+        // Check if user is already a member
+        const userEmail = currentUser?.email || '';
+        const isOwner = board.owner?.email === userEmail;
+        const isMember = board.members?.some(m => m.email === userEmail);
+
+        if (!isOwner && !isMember && currentUser) {
+            // Add user as a member
+            if (!board.members) board.members = [];
+            board.members.push({
+                id: generateId(),
+                name: currentUser.displayName || '',
+                email: currentUser.email,
+                photoURL: currentUser.photoURL || null,
+                role: 'member',
+                addedAt: new Date().toISOString()
+            });
+            saveState();
+            showToast(`You've joined "${board.name}"!`, 'success');
+        }
+
+        // Switch to the board
+        state.currentBoardId = boardId;
+        saveState();
+        renderBoard();
+    } else {
+        showToast('Invalid or expired invite link', 'error');
     }
 
-    // Check if member already exists
-    if (board.members.some(m => m.email.toLowerCase() === email)) {
-        showToast('This person is already a team member', 'warning');
-        emailInput.value = '';
-        return;
-    }
-
-    // Check if trying to add owner
-    if (board.owner?.email?.toLowerCase() === email) {
-        showToast('This is the project owner', 'warning');
-        emailInput.value = '';
-        return;
-    }
-
-    // Add new member
-    const newMember = {
-        id: generateId(),
-        name: '',  // Name will be filled when they accept
-        email: email,
-        photoURL: null,
-        role: 'pending',
-        addedAt: new Date().toISOString()
-    };
-
-    board.members.push(newMember);
-    saveState();
-    renderTeamMembers();
-
-    emailInput.value = '';
-    showToast(`Invitation sent to ${email}`, 'success');
+    // Clean up URL
+    window.history.replaceState({}, document.title, window.location.pathname);
 };
 
 // Remove Member
@@ -1493,3 +1557,8 @@ const removeMember = (memberId) => {
 // INITIALIZE APP
 // ================================
 initAuth();
+
+// Check for invite link after auth is ready
+setTimeout(() => {
+    handleInviteLink();
+}, 1000);
