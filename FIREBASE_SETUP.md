@@ -1,4 +1,4 @@
-# Firebase Setup Guide for FlowBoard
+# Firebase Setup Guide for Scrum71
 
 ## ✅ Firebase is Configured for Project: scrum71
 

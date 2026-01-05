@@ -1,10 +1,10 @@
-// FlowBoard - Trello-like Kanban Board Application with Firebase
+// Scrum71 - Trello-like Kanban Board Application with Firebase
 // =============================================================
 
 // ================================
 // FIREBASE CONFIGURATION
 // ================================
-// Firebase configuration for FlowBoard (using scrum71 project)
+// Firebase configuration for Scrum71 (using scrum71 project)
 const firebaseConfig = {
     apiKey: "AIzaSyAeW96tQLnWeqah7NO8zGOHlfi31nDHOQw",
     authDomain: "scrum71.firebaseapp.com",
