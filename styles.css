@@ -2519,3 +2519,17 @@ button {
     opacity: 0;
     pointer-events: none;
 }
+
+/* Empty State */
+.empty-state {
+    margin: auto;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+}

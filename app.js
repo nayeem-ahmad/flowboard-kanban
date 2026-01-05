@@ -38,6 +38,17 @@ try {
 // ================================
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
+const generateUniqueProjectName = () => {
+    const adjectives = ['Alpha', 'Beta', 'Cosmic', 'Delta', 'Echo', 'Flow', 'Gamma', 'Hyper', 'Ionic', 'Lunar', 'Neon', 'Omega', 'Prime', 'Rapid', 'Solar', 'Terra', 'Ultra', 'Velocity', 'Zenith'];
+    const nouns = ['Board', 'Core', 'Deck', 'Grid', 'Hub', 'Lab', 'Matrix', 'Nexus', 'Orbit', 'Pad', 'Project', 'Space', 'Sphere', 'Station', 'Stream', 'System', 'Vault', 'Zone'];
+
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    const num = Math.floor(Math.random() * 99) + 1;
+
+    return `${adj} ${noun} ${num}`;
+};
+
 // Toast Notifications
 const showToast = (message, type = 'info') => {
     const container = document.getElementById('toastContainer');
@@ -217,16 +228,20 @@ const loadState = async () => {
                 boards.push(doc.data());
             });
 
+            // Set boards state (empty or not) to prevent localStorage fallback
+            state.boards = boards;
+
             if (boards.length > 0) {
-                state.boards = boards;
                 state.currentBoardId = serverCurrentBoardId || boards[0].id;
 
                 // If saved current board is not accessible/deleted, switch to first one
                 if (!state.boards.find(b => b.id === state.currentBoardId)) {
                     state.currentBoardId = state.boards[0].id;
                 }
-                return;
+            } else {
+                state.currentBoardId = null;
             }
+            return;
         } catch (error) {
             console.error('Error loading from Firestore:', error);
         }
@@ -513,16 +528,39 @@ const updateUserUI = (user) => {
 
 // Auth state observer
 const initAuth = () => {
+    // Safety timeout to prevent infinite loading
+    const safetyTimeout = setTimeout(() => {
+        const loadingScreen = document.getElementById('loadingScreen');
+        if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+            console.warn('Auth initialization timed out');
+            loadingScreen.classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+            showToast('Connection timed out. Please check your internet or try again.', 'warning');
+        }
+    }, 10000); // 10 seconds timeout
+
     if (isFirebaseConfigured) {
         auth.onAuthStateChanged(async (user) => {
+            clearTimeout(safetyTimeout);
             currentUser = user;
 
             if (user) {
                 // User is signed in
                 updateUserUI(user);
 
-                // Load user's data
-                await loadState();
+                // Load user's data with timeout handling
+                try {
+                    // Create a promise that rejects after 5 seconds
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('Data load timeout')), 5000)
+                    );
+
+                    // Race loadState against timeout
+                    await Promise.race([loadState(), timeoutPromise]);
+                } catch (error) {
+                    console.error('Data loading issue:', error);
+                    // Continue anyway to not block UI
+                }
 
                 // Show main app, hide auth
                 loadingScreen.classList.add('hidden');
@@ -533,6 +571,19 @@ const initAuth = () => {
                 // Initialize theme and render
                 initTheme();
                 renderBoard();
+
+                // If user has no boards, offer to create one with a unique proposed name
+                if (state.boards.length === 0) {
+                    const proposedName = generateUniqueProjectName();
+                    boardModal.classList.add('active');
+                    const nameInput = document.getElementById('boardName');
+                    nameInput.value = proposedName;
+
+                    // Allow UI to settle then select text
+                    setTimeout(() => nameInput.select(), 100);
+
+                    showToast('Welcome! Create your first project to get started.', 'info');
+                }
 
                 // Check for invite link
                 handleInviteLink();
@@ -545,6 +596,7 @@ const initAuth = () => {
             }
         });
     } else {
+        clearTimeout(safetyTimeout);
         // Firebase not configured - skip auth and use localStorage
         loadingScreen.classList.add('hidden');
         authScreen.classList.add('hidden');
@@ -759,7 +811,12 @@ searchInput.addEventListener('input', (e) => {
 // ================================
 const renderBoard = () => {
     const board = getCurrentBoard();
-    if (!board) return;
+    if (!board) {
+        currentBoardName.textContent = 'No Project';
+        boardElement.innerHTML = '<div class="empty-state">Create a board to get started</div>';
+        document.documentElement.style.setProperty('--board-bg', '#f3f4f6');
+        return;
+    }
 
     currentBoardName.textContent = board.name;
     document.documentElement.style.setProperty('--board-bg', board.background);
@@ -1770,6 +1827,16 @@ const handleInviteLink = async () => {
 
             // Reload clean state
             await loadState();
+
+            // Force switch to the new board
+            state.currentBoardId = boardId;
+
+            // Save preference so it sticks
+            await db.collection('users').doc(currentUser.uid).set({
+                currentBoardId: state.currentBoardId,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
             renderBoard();
         } else if (isOwner || isMember) {
             // Already member, just switch to it
