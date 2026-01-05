@@ -1087,13 +1087,17 @@ const initDragAndDrop = () => {
 };
 
 const handleCardDragStart = (e) => {
-    draggedCard = e.target;
-    e.target.classList.add('dragging');
+    const cardEl = e.target.closest('.card');
+    if (!cardEl) return;
+    draggedCard = cardEl;
+    cardEl.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', cardEl.dataset.cardId);
 };
 
 const handleCardDragEnd = (e) => {
-    e.target.classList.remove('dragging');
+    const cardEl = e.target.closest('.card');
+    if (cardEl) cardEl.classList.remove('dragging');
     document.querySelectorAll('.card-placeholder').forEach(p => p.remove());
     draggedCard = null;
 };
@@ -1127,15 +1131,30 @@ const handleCardDragLeave = (e) => {
 const handleCardDrop = (e) => {
     e.preventDefault();
 
+    // Safety check - ensure we have a valid dragged card
+    if (!draggedCard) return;
+
     const targetListId = e.currentTarget.dataset.listId;
     const cardId = draggedCard.dataset.cardId;
-    const sourceListId = draggedCard.closest('.list').dataset.listId;
+    const sourceListEl = draggedCard.closest('.list');
+
+    // Safety check - ensure we can find source list
+    if (!sourceListEl || !cardId) return;
+
+    const sourceListId = sourceListEl.dataset.listId;
 
     const board = getCurrentBoard();
     const sourceList = board.lists.find(l => l.id === sourceListId);
     const targetList = board.lists.find(l => l.id === targetListId);
 
+    // Safety check - ensure lists exist
+    if (!sourceList || !targetList) return;
+
     const cardIndex = sourceList.cards.findIndex(c => c.id === cardId);
+
+    // Safety check - ensure card was found
+    if (cardIndex === -1) return;
+
     const [card] = sourceList.cards.splice(cardIndex, 1);
 
     const afterElement = getDragAfterElement(e.currentTarget, e.clientY);
@@ -1144,6 +1163,8 @@ const handleCardDrop = (e) => {
     if (afterElement) {
         const afterCardId = afterElement.dataset.cardId;
         insertIndex = targetList.cards.findIndex(c => c.id === afterCardId);
+        // If afterElement's card not found (shouldn't happen), append to end
+        if (insertIndex === -1) insertIndex = targetList.cards.length;
     } else {
         insertIndex = targetList.cards.length;
     }
