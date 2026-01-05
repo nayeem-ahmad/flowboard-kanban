@@ -1,25 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="FlowBoard - A modern Kanban board application for managing your projects and tasks efficiently.">
+    <meta name="description"
+        content="FlowBoard - A modern Kanban board application for managing your projects and tasks efficiently.">
     <title>FlowBoard - Modern Kanban Board</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <!-- Header -->
     <header class="header">
         <div class="header-left">
             <div class="logo">
                 <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="3" width="7" height="7" rx="2" fill="currentColor"/>
-                    <rect x="14" y="3" width="7" height="7" rx="2" fill="currentColor" opacity="0.7"/>
-                    <rect x="3" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.5"/>
-                    <rect x="14" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.3"/>
+                    <rect x="3" y="3" width="7" height="7" rx="2" fill="currentColor" />
+                    <rect x="14" y="3" width="7" height="7" rx="2" fill="currentColor" opacity="0.7" />
+                    <rect x="3" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.5" />
+                    <rect x="14" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.3" />
                 </svg>
                 <span class="logo-text">FlowBoard</span>
             </div>
@@ -29,7 +33,8 @@
                 <button class="board-selector-btn" id="boardSelectorBtn">
                     <span id="currentBoardName">My Project Board</span>
                     <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
                     </svg>
                 </button>
                 <div class="board-dropdown" id="boardDropdown">
@@ -38,27 +43,46 @@
                     <div class="dropdown-divider"></div>
                     <button class="create-board-btn" id="createBoardBtn">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                         Create new board
                     </button>
                 </div>
             </div>
+            <button class="project-info-btn" id="projectInfoBtn" title="Project Info & Team">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path
+                        d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path
+                        d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
         </div>
         <div class="header-right">
             <button class="header-btn" id="searchBtn" title="Search">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                    <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                    <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
             </button>
             <button class="header-btn" id="themeToggle" title="Toggle theme">
                 <svg class="sun-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
-                    <path d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" />
+                    <path
+                        d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
                 <svg class="moon-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
             </button>
             <div class="user-avatar" title="User">
@@ -72,8 +96,8 @@
         <div class="search-modal">
             <div class="search-input-wrapper">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                    <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                    <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
                 <input type="text" id="searchInput" placeholder="Search cards..." autocomplete="off">
                 <kbd>ESC</kbd>
@@ -91,7 +115,8 @@
                 <h2>Create New Board</h2>
                 <button class="modal-close" id="closeBoardModal">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
                     </svg>
                 </button>
             </div>
@@ -103,12 +128,19 @@
                 <div class="form-group">
                     <label>Background Color</label>
                     <div class="color-picker">
-                        <button class="color-option selected" data-color="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></button>
-                        <button class="color-option" data-color="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"></button>
-                        <button class="color-option" data-color="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"></button>
-                        <button class="color-option" data-color="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"></button>
-                        <button class="color-option" data-color="linear-gradient(135deg, #fa709a 0%, #fee140 100%)" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%)"></button>
-                        <button class="color-option" data-color="linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"></button>
+                        <button class="color-option selected"
+                            data-color="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></button>
+                        <button class="color-option" data-color="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+                            style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"></button>
+                        <button class="color-option" data-color="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+                            style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"></button>
+                        <button class="color-option" data-color="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
+                            style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"></button>
+                        <button class="color-option" data-color="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+                            style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%)"></button>
+                        <button class="color-option" data-color="linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"
+                            style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"></button>
                     </div>
                 </div>
             </div>
@@ -119,20 +151,114 @@
         </div>
     </div>
 
+    <!-- Project Info Modal -->
+    <div class="modal-overlay" id="projectInfoModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <div class="project-modal-title">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path
+                            d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path
+                            d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <h2>Project Info & Team</h2>
+                </div>
+                <button class="modal-close" id="closeProjectInfoModal">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body project-info-body">
+                <!-- Project Details Section -->
+                <div class="project-details-section">
+                    <div class="project-header-info">
+                        <div class="project-color-preview" id="projectColorPreview"></div>
+                        <div class="project-info-text">
+                            <h3 id="projectName">Project Name</h3>
+                            <p class="project-stats" id="projectStats">0 lists • 0 cards</p>
+                        </div>
+                    </div>
+                    <div class="project-owner-info">
+                        <span class="owner-label">Owner</span>
+                        <div class="owner-details">
+                            <div class="owner-avatar" id="projectOwnerAvatar">O</div>
+                            <span class="owner-name" id="projectOwnerName">Owner Name</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Members Section -->
+                <div class="team-section">
+                    <div class="team-header">
+                        <h4>
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M16 21V19C16 17.9391 15.5786 16.9217 14.8284 16.1716C14.0783 15.4214 13.0609 15 12 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M20 8V14M17 11H23" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Team Members
+                            <span class="team-count" id="teamCount">0</span>
+                        </h4>
+                    </div>
+
+                    <!-- Invite Member Form -->
+                    <div class="invite-member-form">
+                        <div class="invite-input-wrapper">
+                            <input type="email" id="inviteEmail" placeholder="Enter email address to invite..."
+                                class="form-input">
+                            <button class="btn btn-primary btn-invite" id="inviteMemberBtn">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                Invite
+                            </button>
+                        </div>
+                        <p class="invite-hint">Invite team members to collaborate on this project</p>
+                    </div>
+
+                    <!-- Team Members List -->
+                    <div class="team-members-list" id="teamMembersList">
+                        <!-- Members will be dynamically rendered here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeProjectInfoBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Card Modal -->
     <div class="modal-overlay" id="cardModal">
         <div class="modal modal-lg">
             <div class="modal-header">
                 <div class="card-modal-title">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
-                        <path d="M7 9H17M7 13H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2" />
+                        <path d="M7 9H17M7 13H13" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                     </svg>
                     <input type="text" id="cardTitle" class="card-title-input" placeholder="Card title...">
                 </div>
                 <button class="modal-close" id="closeCardModal">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
                     </svg>
                 </button>
             </div>
@@ -141,17 +267,22 @@
                     <div class="card-section">
                         <h3>
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4 6H20M4 12H20M4 18H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M4 6H20M4 12H20M4 18H14" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
                             </svg>
                             Description
                         </h3>
-                        <textarea id="cardDescription" class="card-description" placeholder="Add a more detailed description..."></textarea>
+                        <textarea id="cardDescription" class="card-description"
+                            placeholder="Add a more detailed description..."></textarea>
                     </div>
                     <div class="card-section">
                         <h3>
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path
+                                    d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                             </svg>
                             Checklist
                         </h3>
@@ -197,18 +328,40 @@
                         <input type="date" id="cardDueDate" class="form-input">
                     </div>
                     <div class="sidebar-section">
+                        <h4>Time Tracking</h4>
+                        <div class="time-tracking-inputs">
+                            <div class="time-input-group">
+                                <label for="cardInitialEstimate">Initial Estimate (hrs)</label>
+                                <input type="number" id="cardInitialEstimate" class="form-input" min="0" step="0.5"
+                                    placeholder="0">
+                            </div>
+                            <div class="time-input-group">
+                                <label for="cardRemainingHours">Remaining (hrs)</label>
+                                <input type="number" id="cardRemainingHours" class="form-input" min="0" step="0.5"
+                                    placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sidebar-section">
                         <h4>Actions</h4>
                         <button class="action-btn" id="duplicateCardBtn">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
-                                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" stroke-width="2"/>
+                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor"
+                                    stroke-width="2" />
+                                <path
+                                    d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5"
+                                    stroke="currentColor" stroke-width="2" />
                             </svg>
                             Duplicate
                         </button>
                         <button class="action-btn danger" id="deleteCardBtn">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path
+                                    d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
                             </svg>
                             Delete
                         </button>
@@ -237,10 +390,10 @@
         <div class="loading-content">
             <div class="loading-logo">
                 <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="3" width="7" height="7" rx="2" fill="currentColor"/>
-                    <rect x="14" y="3" width="7" height="7" rx="2" fill="currentColor" opacity="0.7"/>
-                    <rect x="3" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.5"/>
-                    <rect x="14" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.3"/>
+                    <rect x="3" y="3" width="7" height="7" rx="2" fill="currentColor" />
+                    <rect x="14" y="3" width="7" height="7" rx="2" fill="currentColor" opacity="0.7" />
+                    <rect x="3" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.5" />
+                    <rect x="14" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.3" />
                 </svg>
                 <span>FlowBoard</span>
             </div>
@@ -255,10 +408,10 @@
             <div class="auth-header">
                 <div class="auth-logo">
                     <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="3" y="3" width="7" height="7" rx="2" fill="currentColor"/>
-                        <rect x="14" y="3" width="7" height="7" rx="2" fill="currentColor" opacity="0.7"/>
-                        <rect x="3" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.5"/>
-                        <rect x="14" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.3"/>
+                        <rect x="3" y="3" width="7" height="7" rx="2" fill="currentColor" />
+                        <rect x="14" y="3" width="7" height="7" rx="2" fill="currentColor" opacity="0.7" />
+                        <rect x="3" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.5" />
+                        <rect x="14" y="14" width="7" height="7" rx="2" fill="currentColor" opacity="0.3" />
                     </svg>
                     <span>FlowBoard</span>
                 </div>
@@ -279,7 +432,8 @@
                     </div>
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password"
+                            required>
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">
                         <span>Sign In</span>
@@ -296,11 +450,13 @@
                     </div>
                     <div class="form-group">
                         <label for="registerEmail">Email</label>
-                        <input type="email" id="registerEmail" class="form-input" placeholder="Enter your email" required>
+                        <input type="email" id="registerEmail" class="form-input" placeholder="Enter your email"
+                            required>
                     </div>
                     <div class="form-group">
                         <label for="registerPassword">Password</label>
-                        <input type="password" id="registerPassword" class="form-input" placeholder="Create a password (min 6 characters)" required minlength="6">
+                        <input type="password" id="registerPassword" class="form-input"
+                            placeholder="Create a password (min 6 characters)" required minlength="6">
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">
                         <span>Create Account</span>
@@ -329,16 +485,25 @@
                 <div class="social-auth">
                     <button type="button" class="social-btn google-btn" id="googleSignIn">
                         <svg viewBox="0 0 24 24">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            <path
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                fill="#4285F4" />
+                            <path
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                fill="#34A853" />
+                            <path
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                                fill="#FBBC05" />
+                            <path
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                fill="#EA4335" />
                         </svg>
                         <span>Google</span>
                     </button>
                     <button type="button" class="social-btn github-btn" id="githubSignIn">
                         <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                            <path
+                                d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
                         </svg>
                         <span>GitHub</span>
                     </button>
@@ -363,9 +528,13 @@
         <div class="user-menu-divider"></div>
         <button class="user-menu-item" id="signOutBtn">
             <svg viewBox="0 0 24 24" fill="none">
-                <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                    d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
             </svg>
             Sign Out
         </button>
@@ -375,7 +544,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    
+
     <script src="app.js"></script>
 </body>
+
 </html>

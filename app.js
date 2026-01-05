@@ -86,37 +86,61 @@ const initializeSampleData = () => {
         id: generateId(),
         name: 'My Project Board',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        owner: {
+            id: 'owner-1',
+            name: 'You',
+            email: 'you@example.com',
+            photoURL: null
+        },
+        members: [
+            {
+                id: 'member-1',
+                name: 'Sarah Chen',
+                email: 'sarah.chen@example.com',
+                photoURL: null,
+                role: 'member',
+                addedAt: new Date().toISOString()
+            },
+            {
+                id: 'member-2',
+                name: 'Alex Johnson',
+                email: 'alex.j@example.com',
+                photoURL: null,
+                role: 'member',
+                addedAt: new Date().toISOString()
+            }
+        ],
         lists: [
             {
                 id: generateId(),
                 title: 'To Do',
                 cards: [
-                    { id: generateId(), title: 'Research competitor products', description: 'Analyze top 5 competitors', labels: ['priority-high'], dueDate: '2026-01-10', checklist: [{ id: generateId(), text: 'Find competitors', completed: true }, { id: generateId(), text: 'Analyze features', completed: false }] },
-                    { id: generateId(), title: 'Design homepage mockup', description: 'Create wireframes and high-fidelity designs', labels: ['feature'], dueDate: '', checklist: [] },
-                    { id: generateId(), title: 'Set up development environment', description: '', labels: ['improvement'], dueDate: '2026-01-08', checklist: [] }
+                    { id: generateId(), title: 'Research competitor products', description: 'Analyze top 5 competitors', labels: ['priority-high'], dueDate: '2026-01-10', checklist: [{ id: generateId(), text: 'Find competitors', completed: true }, { id: generateId(), text: 'Analyze features', completed: false }], initialEstimate: 8, remainingHours: 5 },
+                    { id: generateId(), title: 'Design homepage mockup', description: 'Create wireframes and high-fidelity designs', labels: ['feature'], dueDate: '', checklist: [], initialEstimate: 16, remainingHours: 16 },
+                    { id: generateId(), title: 'Set up development environment', description: '', labels: ['improvement'], dueDate: '2026-01-08', checklist: [], initialEstimate: 4, remainingHours: 2 }
                 ]
             },
             {
                 id: generateId(),
                 title: 'In Progress',
                 cards: [
-                    { id: generateId(), title: 'Implement user authentication', description: 'OAuth2 and email/password login', labels: ['feature', 'priority-medium'], dueDate: '2026-01-15', checklist: [{ id: generateId(), text: 'Set up OAuth', completed: true }, { id: generateId(), text: 'Email verification', completed: false }] },
-                    { id: generateId(), title: 'Create database schema', description: 'PostgreSQL with proper indexing', labels: ['priority-high'], dueDate: '', checklist: [] }
+                    { id: generateId(), title: 'Implement user authentication', description: 'OAuth2 and email/password login', labels: ['feature', 'priority-medium'], dueDate: '2026-01-15', checklist: [{ id: generateId(), text: 'Set up OAuth', completed: true }, { id: generateId(), text: 'Email verification', completed: false }], initialEstimate: 24, remainingHours: 12 },
+                    { id: generateId(), title: 'Create database schema', description: 'PostgreSQL with proper indexing', labels: ['priority-high'], dueDate: '', checklist: [], initialEstimate: 8, remainingHours: 6 }
                 ]
             },
             {
                 id: generateId(),
                 title: 'Review',
                 cards: [
-                    { id: generateId(), title: 'API documentation', description: 'Swagger/OpenAPI specs', labels: ['improvement'], dueDate: '2026-01-07', checklist: [] }
+                    { id: generateId(), title: 'API documentation', description: 'Swagger/OpenAPI specs', labels: ['improvement'], dueDate: '2026-01-07', checklist: [], initialEstimate: 6, remainingHours: 3 }
                 ]
             },
             {
                 id: generateId(),
                 title: 'Done',
                 cards: [
-                    { id: generateId(), title: 'Project setup', description: 'Initial configuration complete', labels: ['priority-low'], dueDate: '', checklist: [] },
-                    { id: generateId(), title: 'Team kickoff meeting', description: 'Introductions and project overview', labels: [], dueDate: '', checklist: [] }
+                    { id: generateId(), title: 'Project setup', description: 'Initial configuration complete', labels: ['priority-low'], dueDate: '', checklist: [], initialEstimate: 2, remainingHours: 0 },
+                    { id: generateId(), title: 'Team kickoff meeting', description: 'Introductions and project overview', labels: [], dueDate: '', checklist: [], initialEstimate: 1, remainingHours: 0 }
                 ]
             }
         ]
@@ -592,6 +616,13 @@ document.getElementById('saveBoardBtn').addEventListener('click', () => {
         id: generateId(),
         name,
         background: color,
+        owner: {
+            id: currentUser?.uid || 'local-user',
+            name: currentUser?.displayName || 'You',
+            email: currentUser?.email || 'you@example.com',
+            photoURL: currentUser?.photoURL || null
+        },
+        members: [],
         lists: []
     };
 
@@ -620,6 +651,7 @@ document.addEventListener('keydown', (e) => {
         searchModal.classList.remove('active');
         cardModal.classList.remove('active');
         boardModal.classList.remove('active');
+        document.getElementById('projectInfoModal').classList.remove('active');
     }
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
@@ -758,14 +790,31 @@ const createListElement = (list) => {
 
     const completedCards = list.cards.filter(c => c.checklist.length && c.checklist.every(i => i.completed)).length;
 
+    // Calculate totals for time tracking
+    const totalInitialEstimate = list.cards.reduce((sum, card) => sum + (card.initialEstimate || 0), 0);
+    const totalRemainingHours = list.cards.reduce((sum, card) => sum + (card.remainingHours || 0), 0);
+
     listEl.innerHTML = `
         <div class="list-header">
             <input type="text" class="list-title" value="${list.title}">
-            <span class="list-count">${list.cards.length}</span>
+            <div class="list-badges">
+                <span class="list-hour-badge estimate" title="Total Initial Estimate">
+                    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    ${totalInitialEstimate}h
+                </span>
+                <span class="list-hour-badge remaining" title="Total Remaining Hours">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    ${totalRemainingHours}h
+                </span>
+                <span class="list-count">${list.cards.length}</span>
+            </div>
             <button class="list-menu-btn">
                 <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/></svg>
             </button>
             <div class="list-menu">
+                <button class="list-menu-item move-list-left"><svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Move Left</button>
+                <button class="list-menu-item move-list-right"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Move Right</button>
+                <div class="list-menu-divider"></div>
                 <button class="list-menu-item copy-list"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" stroke-width="2"/></svg>Copy list</button>
                 <button class="list-menu-item clear-list"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 9L15 15M15 9L9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Clear cards</button>
                 <button class="list-menu-item danger delete-list"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6H21M8 6V4C8 2.89543 8.89543 2 10 2H14C15.1046 2 16 2.89543 16 4V6M19 6V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Delete list</button>
@@ -816,6 +865,32 @@ const createListElement = (list) => {
 
     document.addEventListener('click', () => menu.classList.remove('active'));
 
+    // Move list left
+    listEl.querySelector('.move-list-left').addEventListener('click', () => {
+        const currentIndex = board.lists.indexOf(list);
+        if (currentIndex > 0) {
+            // Swap with the list on the left
+            [board.lists[currentIndex - 1], board.lists[currentIndex]] =
+                [board.lists[currentIndex], board.lists[currentIndex - 1]];
+            saveState();
+            renderBoard();
+            showToast('List moved left!', 'success');
+        }
+    });
+
+    // Move list right
+    listEl.querySelector('.move-list-right').addEventListener('click', () => {
+        const currentIndex = board.lists.indexOf(list);
+        if (currentIndex < board.lists.length - 1) {
+            // Swap with the list on the right
+            [board.lists[currentIndex], board.lists[currentIndex + 1]] =
+                [board.lists[currentIndex + 1], board.lists[currentIndex]];
+            saveState();
+            renderBoard();
+            showToast('List moved right!', 'success');
+        }
+    });
+
     listEl.querySelector('.copy-list').addEventListener('click', () => {
         const newList = JSON.parse(JSON.stringify(list));
         newList.id = generateId();
@@ -861,7 +936,7 @@ const createListElement = (list) => {
     listEl.querySelector('.add-card-save').addEventListener('click', () => {
         const title = addCardInput.value.trim();
         if (title) {
-            list.cards.push({ id: generateId(), title, description: '', labels: [], dueDate: '', checklist: [] });
+            list.cards.push({ id: generateId(), title, description: '', labels: [], dueDate: '', checklist: [], initialEstimate: 0, remainingHours: 0 });
             saveState();
             renderBoard();
             showToast('Card added!', 'success');
@@ -911,7 +986,8 @@ const createCardElement = (card, listId) => {
     ` : '';
 
     let metaHtml = '';
-    if (card.dueDate || card.checklist.length || card.description) {
+    const hasTimeTracking = (card.initialEstimate && card.initialEstimate > 0) || (card.remainingHours && card.remainingHours > 0);
+    if (card.dueDate || card.checklist.length || card.description || hasTimeTracking) {
         const dueDateClass = card.dueDate ? (new Date(card.dueDate) < new Date() ? 'overdue' : new Date(card.dueDate) < new Date(Date.now() + 86400000 * 2) ? 'soon' : '') : '';
         metaHtml = `<div class="card-meta">`;
         if (card.dueDate) {
@@ -923,6 +999,11 @@ const createCardElement = (card, listId) => {
         if (card.checklist.length) {
             const completed = card.checklist.filter(i => i.completed).length;
             metaHtml += `<span class="card-meta-item ${completed === card.checklist.length ? '' : ''}"><svg viewBox="0 0 24 24" fill="none"><path d="M9 11L12 14L22 4M21 12V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>${completed}/${card.checklist.length}</span>`;
+        }
+        if (hasTimeTracking) {
+            const isComplete = card.remainingHours === 0 && card.initialEstimate > 0;
+            const badgeClass = isComplete ? 'complete' : (card.remainingHours > 0 ? 'has-remaining' : '');
+            metaHtml += `<span class="card-time-badge ${badgeClass}"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>${card.remainingHours || 0}/${card.initialEstimate || 0}h</span>`;
         }
         metaHtml += `</div>`;
     }
@@ -953,6 +1034,10 @@ const openCardModal = (cardId, listId) => {
     document.getElementById('cardTitle').value = card.title;
     document.getElementById('cardDescription').value = card.description;
     document.getElementById('cardDueDate').value = card.dueDate;
+
+    // Time tracking
+    document.getElementById('cardInitialEstimate').value = card.initialEstimate || '';
+    document.getElementById('cardRemainingHours').value = card.remainingHours || '';
 
     // Labels
     document.querySelectorAll('.label-option').forEach(opt => {
@@ -1027,6 +1112,10 @@ document.getElementById('saveCardBtn').addEventListener('click', () => {
     card.description = document.getElementById('cardDescription').value;
     card.dueDate = document.getElementById('cardDueDate').value;
     card.labels = Array.from(document.querySelectorAll('.label-option.selected')).map(o => o.dataset.label);
+
+    // Time tracking
+    card.initialEstimate = parseFloat(document.getElementById('cardInitialEstimate').value) || 0;
+    card.remainingHours = parseFloat(document.getElementById('cardRemainingHours').value) || 0;
 
     saveState();
     renderBoard();
@@ -1188,6 +1277,216 @@ const getDragAfterElement = (container, y) => {
         }
         return closest;
     }, { offset: Number.NEGATIVE_INFINITY }).element;
+};
+
+// ================================
+// PROJECT INFO MODAL
+// ================================
+const projectInfoModal = document.getElementById('projectInfoModal');
+const projectInfoBtn = document.getElementById('projectInfoBtn');
+
+// Open Project Info Modal
+projectInfoBtn.addEventListener('click', () => {
+    openProjectInfoModal();
+});
+
+// Close Project Info Modal
+document.getElementById('closeProjectInfoModal').addEventListener('click', () => {
+    projectInfoModal.classList.remove('active');
+});
+
+document.getElementById('closeProjectInfoBtn').addEventListener('click', () => {
+    projectInfoModal.classList.remove('active');
+});
+
+projectInfoModal.addEventListener('click', (e) => {
+    if (e.target === projectInfoModal) projectInfoModal.classList.remove('active');
+});
+
+// Open and render Project Info Modal
+const openProjectInfoModal = () => {
+    const board = getCurrentBoard();
+    if (!board) return;
+
+    // Update project details
+    document.getElementById('projectColorPreview').style.background = board.background;
+    document.getElementById('projectName').textContent = board.name;
+
+    // Calculate stats
+    const listCount = board.lists?.length || 0;
+    const cardCount = board.lists?.reduce((sum, list) => sum + (list.cards?.length || 0), 0) || 0;
+    document.getElementById('projectStats').textContent = `${listCount} list${listCount !== 1 ? 's' : ''} • ${cardCount} card${cardCount !== 1 ? 's' : ''}`;
+
+    // Update owner info
+    const owner = board.owner || { name: currentUser?.displayName || 'You', email: currentUser?.email || 'you@example.com', photoURL: currentUser?.photoURL };
+    const ownerAvatarEl = document.getElementById('projectOwnerAvatar');
+    const ownerNameEl = document.getElementById('projectOwnerName');
+
+    if (owner.photoURL) {
+        ownerAvatarEl.innerHTML = `<img src="${owner.photoURL}" alt="${owner.name}">`;
+    } else {
+        ownerAvatarEl.innerHTML = owner.name.charAt(0).toUpperCase();
+    }
+    ownerNameEl.textContent = owner.name;
+
+    // Render team members
+    renderTeamMembers();
+
+    projectInfoModal.classList.add('active');
+};
+
+// Render Team Members List
+const renderTeamMembers = () => {
+    const board = getCurrentBoard();
+    if (!board) return;
+
+    const members = board.members || [];
+    const teamMembersList = document.getElementById('teamMembersList');
+    const teamCount = document.getElementById('teamCount');
+
+    teamCount.textContent = members.length;
+
+    if (members.length === 0) {
+        teamMembersList.innerHTML = `
+            <div class="team-empty-state">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p>No team members yet. Invite someone to collaborate!</p>
+            </div>
+        `;
+        return;
+    }
+
+    teamMembersList.innerHTML = members.map(member => {
+        const initial = member.name ? member.name.charAt(0).toUpperCase() : member.email.charAt(0).toUpperCase();
+        const avatarContent = member.photoURL
+            ? `<img src="${member.photoURL}" alt="${member.name || member.email}">`
+            : initial;
+        const roleClass = member.role === 'pending' ? 'pending' : '';
+        const roleText = member.role === 'pending' ? 'Pending' : 'Member';
+
+        return `
+            <div class="team-member-item" data-member-id="${member.id}">
+                <div class="member-avatar">${avatarContent}</div>
+                <div class="member-info">
+                    <div class="member-name">${member.name || 'Invited User'}</div>
+                    <div class="member-email">${member.email}</div>
+                </div>
+                <span class="member-role ${roleClass}">${roleText}</span>
+                <div class="member-actions">
+                    <button class="member-action-btn danger remove-member-btn" title="Remove member" data-member-id="${member.id}">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Add event listeners for remove buttons
+    teamMembersList.querySelectorAll('.remove-member-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const memberId = btn.dataset.memberId;
+            removeMember(memberId);
+        });
+    });
+};
+
+// Invite Member
+document.getElementById('inviteMemberBtn').addEventListener('click', () => {
+    inviteMember();
+});
+
+document.getElementById('inviteEmail').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        inviteMember();
+    }
+});
+
+const inviteMember = () => {
+    const emailInput = document.getElementById('inviteEmail');
+    const email = emailInput.value.trim().toLowerCase();
+
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+        showToast('Please enter an email address', 'warning');
+        emailInput.focus();
+        return;
+    }
+
+    if (!emailRegex.test(email)) {
+        showToast('Please enter a valid email address', 'error');
+        emailInput.focus();
+        return;
+    }
+
+    const board = getCurrentBoard();
+    if (!board) return;
+
+    // Initialize members array if not exists
+    if (!board.members) {
+        board.members = [];
+    }
+
+    // Check if member already exists
+    if (board.members.some(m => m.email.toLowerCase() === email)) {
+        showToast('This person is already a team member', 'warning');
+        emailInput.value = '';
+        return;
+    }
+
+    // Check if trying to add owner
+    if (board.owner?.email?.toLowerCase() === email) {
+        showToast('This is the project owner', 'warning');
+        emailInput.value = '';
+        return;
+    }
+
+    // Add new member
+    const newMember = {
+        id: generateId(),
+        name: '',  // Name will be filled when they accept
+        email: email,
+        photoURL: null,
+        role: 'pending',
+        addedAt: new Date().toISOString()
+    };
+
+    board.members.push(newMember);
+    saveState();
+    renderTeamMembers();
+
+    emailInput.value = '';
+    showToast(`Invitation sent to ${email}`, 'success');
+};
+
+// Remove Member
+const removeMember = (memberId) => {
+    const board = getCurrentBoard();
+    if (!board || !board.members) return;
+
+    const member = board.members.find(m => m.id === memberId);
+    if (!member) return;
+
+    // Confirm removal
+    if (!confirm(`Are you sure you want to remove ${member.name || member.email} from the team?`)) {
+        return;
+    }
+
+    board.members = board.members.filter(m => m.id !== memberId);
+    saveState();
+    renderTeamMembers();
+
+    showToast(`${member.name || member.email} has been removed from the team`, 'info');
 };
 
 // ================================
