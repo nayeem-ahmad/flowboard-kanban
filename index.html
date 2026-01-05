@@ -375,6 +375,12 @@
                         </div>
                     </div>
                     <div class="sidebar-section">
+                        <h4>Assignee</h4>
+                        <select id="cardAssignee" class="form-input">
+                            <option value="">Unassigned</option>
+                        </select>
+                    </div>
+                    <div class="sidebar-section">
                         <h4>Actions</h4>
                         <button class="action-btn" id="duplicateCardBtn">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -571,6 +577,28 @@
             Sign Out
         </button>
     </div>
+
+    <!-- Floating Burndown Panel -->
+    <div class="burndown-panel" id="burndownPanel">
+        <div class="burndown-header" id="burndownHeader">
+            <div class="burndown-info">
+                <span class="burndown-label">Total Remaining Work</span>
+                <span class="burndown-value" id="totalRemainingValue">0h</span>
+            </div>
+            <button class="burndown-toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+        </div>
+        <div class="burndown-chart-container">
+            <canvas id="burndownChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>

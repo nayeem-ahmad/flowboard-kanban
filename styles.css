@@ -2430,3 +2430,92 @@ button {
     color: var(--success);
     background: rgba(34, 197, 94, 0.1);
 }
+/* Burndown Panel */
+.burndown-panel {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 320px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    z-index: 90;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.burndown-panel.collapsed {
+    height: auto;
+}
+
+.burndown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    cursor: pointer;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.burndown-panel:not(.collapsed) .burndown-header {
+    border-bottom-color: var(--border-color);
+}
+
+.burndown-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.burndown-label {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.burndown-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    line-height: 1.2;
+}
+
+.burndown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.burndown-toggle svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s;
+}
+
+.burndown-panel.collapsed .burndown-toggle svg {
+    transform: rotate(180deg);
+}
+
+.burndown-chart-container {
+    padding: 1rem;
+    height: 240px;
+    background: var(--bg-primary);
+    transition: all 0.3s ease;
+}
+
+.burndown-panel.collapsed .burndown-chart-container {
+    height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    pointer-events: none;
+}

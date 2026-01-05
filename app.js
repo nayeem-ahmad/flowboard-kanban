@@ -143,6 +143,12 @@ const initializeSampleData = () => {
                     { id: generateId(), title: 'Team kickoff meeting', description: 'Introductions and project overview', labels: [], dueDate: '', checklist: [], initialEstimate: 1, remainingHours: 0 }
                 ]
             }
+        ],
+        history: [
+            { date: '2026-01-01', remaining: 42 },
+            { date: '2026-01-02', remaining: 38 },
+            { date: '2026-01-03', remaining: 32 },
+            { date: '2026-01-04', remaining: 29 }
         ]
     };
 
@@ -153,6 +159,7 @@ const initializeSampleData = () => {
 // ================================
 // DATA PERSISTENCE (Firestore + LocalStorage Fallback)
 // ================================
+
 const saveState = async () => {
     // Always save to localStorage as backup
     localStorage.setItem('flowboard-state', JSON.stringify(state));
@@ -160,11 +167,27 @@ const saveState = async () => {
     // If Firebase is configured and user is logged in, save to Firestore
     if (isFirebaseConfigured && currentUser) {
         try {
+            // 1. Save preferences to user profile
             await db.collection('users').doc(currentUser.uid).set({
-                boards: state.boards,
                 currentBoardId: state.currentBoardId,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
+
+            // 2. Save CURRENT board to boards collection
+            const currentBoard = getCurrentBoard();
+            if (currentBoard) {
+                // Prepare searchable member emails
+                const memberEmails = [
+                    currentBoard.owner?.email,
+                    ...(currentBoard.members || []).map(m => m.email)
+                ].filter(Boolean); // Remove null/undefined
+
+                await db.collection('boards').doc(currentBoard.id).set({
+                    ...currentBoard,
+                    memberEmails, // For querying
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            }
         } catch (error) {
             console.error('Error saving to Firestore:', error);
             showToast('Failed to sync to cloud', 'warning');
@@ -176,12 +199,32 @@ const loadState = async () => {
     // If Firebase is configured and user is logged in, load from Firestore
     if (isFirebaseConfigured && currentUser) {
         try {
-            const doc = await db.collection('users').doc(currentUser.uid).get();
-            if (doc.exists) {
-                const data = doc.data();
-                state.boards = data.boards || [];
-                state.currentBoardId = data.currentBoardId;
-                if (!state.boards.length) initializeSampleData();
+            // 1. Get User Preferences
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            let serverCurrentBoardId = null;
+            if (userDoc.exists) {
+                serverCurrentBoardId = userDoc.data().currentBoardId;
+            }
+
+            // 2. Query boards where user is a member (or owner)
+            // Note: In Firestore, array-contains checks if the value exists in the array
+            const boardsSnapshot = await db.collection('boards')
+                .where('memberEmails', 'array-contains', currentUser.email)
+                .get();
+
+            const boards = [];
+            boardsSnapshot.forEach(doc => {
+                boards.push(doc.data());
+            });
+
+            if (boards.length > 0) {
+                state.boards = boards;
+                state.currentBoardId = serverCurrentBoardId || boards[0].id;
+
+                // If saved current board is not accessible/deleted, switch to first one
+                if (!state.boards.find(b => b.id === state.currentBoardId)) {
+                    state.currentBoardId = state.boards[0].id;
+                }
                 return;
             }
         } catch (error) {
@@ -490,6 +533,9 @@ const initAuth = () => {
                 // Initialize theme and render
                 initTheme();
                 renderBoard();
+
+                // Check for invite link
+                handleInviteLink();
             } else {
                 // User is signed out
                 loadingScreen.classList.add('hidden');
@@ -777,7 +823,147 @@ const renderBoard = () => {
 
     boardElement.appendChild(addListEl);
     initDragAndDrop();
+    updateBurndownChart();
 };
+
+// ================================
+// BURNDOWN CHART
+// ================================
+let burndownChart = null;
+
+const updateBurndownChart = () => {
+    const board = getCurrentBoard();
+    if (!board) return;
+
+    // Calculate total remaining
+    let totalRemaining = 0;
+    board.lists.forEach(list => {
+        list.cards.forEach(card => {
+            totalRemaining += parseFloat(card.remainingHours || 0);
+        });
+    });
+
+    // Update UI text
+    const totalEl = document.getElementById('totalRemainingValue');
+    if (totalEl) totalEl.textContent = `${totalRemaining}h`;
+
+    // Initialize history if missing
+    if (!board.history) board.history = [];
+
+    // Update history for today
+    const today = new Date().toISOString().split('T')[0];
+    const todayEntryIndex = board.history.findIndex(h => h.date === today);
+
+    if (todayEntryIndex >= 0) {
+        board.history[todayEntryIndex].remaining = totalRemaining;
+    } else {
+        board.history.push({ date: today, remaining: totalRemaining });
+    }
+
+    // Sort history by date
+    board.history.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Save automatically to persist the history update
+    // We strictly avoid infinite loops by not calling renderBoard here
+    // But we need to save the state.
+    // However, saveState() doesn't call renderBoard(), so it is safe.
+    saveState();
+
+    // Render Chart
+    const ctx = document.getElementById('burndownChart');
+    if (!ctx) return;
+
+    // Destroy existing chart if it exists
+    if (burndownChart) {
+        burndownChart.destroy();
+    }
+
+    // Chart.js Configuration
+    burndownChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: board.history.map(h => {
+                const date = new Date(h.date);
+                return `${date.getDate()}/${date.getMonth() + 1}`;
+            }),
+            datasets: [{
+                label: 'Remaining Hours',
+                data: board.history.map(h => h.remaining),
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#6366f1',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.parsed.y} hours remaining`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        borderDash: [5, 5]
+                    },
+                    ticks: {
+                        font: {
+                            family: "'Inter', sans-serif",
+                            size: 11
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            family: "'Inter', sans-serif",
+                            size: 11
+                        }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+
+    // Check dark mode for chart styling
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#334155';
+    }
+};
+
+// Toggle Panel
+const burndownPanel = document.getElementById('burndownPanel');
+const burndownHeader = document.getElementById('burndownHeader');
+
+if (burndownHeader) {
+    burndownHeader.addEventListener('click', () => {
+        burndownPanel.classList.toggle('collapsed');
+    });
+}
 
 // ================================
 // CREATE LIST ELEMENT
@@ -987,7 +1173,7 @@ const createCardElement = (card, listId) => {
 
     let metaHtml = '';
     const hasTimeTracking = (card.initialEstimate && card.initialEstimate > 0) || (card.remainingHours && card.remainingHours > 0);
-    if (card.dueDate || card.checklist.length || card.description || hasTimeTracking) {
+    if (card.dueDate || card.checklist.length || card.description || hasTimeTracking || card.assigneeId) {
         const dueDateClass = card.dueDate ? (new Date(card.dueDate) < new Date() ? 'overdue' : new Date(card.dueDate) < new Date(Date.now() + 86400000 * 2) ? 'soon' : '') : '';
         metaHtml = `<div class="card-meta">`;
         if (card.dueDate) {
@@ -1005,6 +1191,23 @@ const createCardElement = (card, listId) => {
             const badgeClass = isComplete ? 'complete' : (card.remainingHours > 0 ? 'has-remaining' : '');
             metaHtml += `<span class="card-time-badge ${badgeClass}"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>${card.remainingHours || 0}/${card.initialEstimate || 0}h</span>`;
         }
+
+        // Assignee Avatar
+        if (card.assigneeId) {
+            const board = getCurrentBoard();
+            if (board) {
+                const assignee = board.members?.find(m => m.id === card.assigneeId) || (board.owner?.id === card.assigneeId ? board.owner : null);
+                if (assignee) {
+                    const initial = assignee.name ? assignee.name.charAt(0).toUpperCase() : (assignee.email ? assignee.email.charAt(0).toUpperCase() : '?');
+                    const avatarContent = assignee.photoURL
+                        ? `<img src="${assignee.photoURL}" alt="${assignee.name || 'Assignee'}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">`
+                        : `<span style="width: 20px; height: 20px; border-radius: 50%; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: bold;">${initial}</span>`;
+
+                    metaHtml += `<div class="card-assignee" style="margin-left: auto;" title="Assigned to ${assignee.name || assignee.email}">${avatarContent}</div>`;
+                }
+            }
+        }
+
         metaHtml += `</div>`;
     }
 
@@ -1038,6 +1241,26 @@ const openCardModal = (cardId, listId) => {
     // Time tracking
     document.getElementById('cardInitialEstimate').value = card.initialEstimate || '';
     document.getElementById('cardRemainingHours').value = card.remainingHours || '';
+
+    // Assignee
+    const assigneeSelect = document.getElementById('cardAssignee');
+    assigneeSelect.innerHTML = '<option value="">Unassigned</option>';
+
+    // Add owner
+    if (board.owner) {
+        const ownerName = board.owner.name || board.owner.email || 'Owner';
+        assigneeSelect.add(new Option(`${ownerName} (Owner)`, board.owner.id));
+    }
+
+    // Add members
+    if (board.members) {
+        board.members.forEach(m => {
+            const name = m.name || m.email;
+            assigneeSelect.add(new Option(name, m.id));
+        });
+    }
+
+    assigneeSelect.value = card.assigneeId || '';
 
     // Labels
     document.querySelectorAll('.label-option').forEach(opt => {
@@ -1116,6 +1339,9 @@ document.getElementById('saveCardBtn').addEventListener('click', () => {
     // Time tracking
     card.initialEstimate = parseFloat(document.getElementById('cardInitialEstimate').value) || 0;
     card.remainingHours = parseFloat(document.getElementById('cardRemainingHours').value) || 0;
+
+    // Assignee
+    card.assigneeId = document.getElementById('cardAssignee').value;
 
     saveState();
     renderBoard();
@@ -1490,17 +1716,29 @@ document.getElementById('regenerateLinkBtn').addEventListener('click', () => {
 });
 
 // Handle joining via invite link
-const handleInviteLink = () => {
+const handleInviteLink = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const inviteToken = urlParams.get('invite');
     const boardId = urlParams.get('board');
 
     if (!inviteToken || !boardId) return;
 
-    // Find the board with matching invite token
-    const board = state.boards.find(b => b.id === boardId && b.inviteToken === inviteToken);
+    try {
+        // Fetch board directly from Firestore
+        const doc = await db.collection('boards').doc(boardId).get();
+        if (!doc.exists) {
+            showToast('Board not found', 'error');
+            return;
+        }
 
-    if (board) {
+        const board = doc.data();
+
+        // Verify token
+        if (board.inviteToken !== inviteToken) {
+            showToast('Invalid or expired invite link', 'error');
+            return;
+        }
+
         // Check if user is already a member
         const userEmail = currentUser?.email || '';
         const isOwner = board.owner?.email === userEmail;
@@ -1509,6 +1747,7 @@ const handleInviteLink = () => {
         if (!isOwner && !isMember && currentUser) {
             // Add user as a member
             if (!board.members) board.members = [];
+
             board.members.push({
                 id: generateId(),
                 name: currentUser.displayName || '',
@@ -1517,16 +1756,37 @@ const handleInviteLink = () => {
                 role: 'member',
                 addedAt: new Date().toISOString()
             });
-            saveState();
+
+            // Update memberEmails for querying
+            board.memberEmails = [
+                board.owner?.email,
+                ...(board.members || []).map(m => m.email)
+            ].filter(Boolean);
+
+            // Update board in Firestore
+            await db.collection('boards').doc(board.id).set(board, { merge: true });
+
             showToast(`You've joined "${board.name}"!`, 'success');
+
+            // Reload clean state
+            await loadState();
+            renderBoard();
+        } else if (isOwner || isMember) {
+            // Already member, just switch to it
+            state.currentBoardId = boardId;
+            // Save preference
+            await db.collection('users').doc(currentUser.uid).set({
+                currentBoardId: state.currentBoardId,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            renderBoard();
+            showToast('Welcome back to the board!', 'success');
         }
 
-        // Switch to the board
-        state.currentBoardId = boardId;
-        saveState();
-        renderBoard();
-    } else {
-        showToast('Invalid or expired invite link', 'error');
+    } catch (error) {
+        console.error('Error joining board:', error);
+        showToast('Error joining board', 'error');
     }
 
     // Clean up URL
@@ -1557,8 +1817,3 @@ const removeMember = (memberId) => {
 // INITIALIZE APP
 // ================================
 initAuth();
-
-// Check for invite link after auth is ready
-setTimeout(() => {
-    handleInviteLink();
-}, 1000);

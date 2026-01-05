@@ -1,0 +1,58 @@
+[debug] [2026-01-05T11:23:58.554Z] ----------------------------------------------------------------------
+[debug] [2026-01-05T11:23:58.556Z] Command:       /opt/homebrew/Cellar/node/25.2.1/bin/node /Users/bs01621/.npm/_npx/7750544ccf494d8b/node_modules/.bin/firebase deploy
+[debug] [2026-01-05T11:23:58.556Z] CLI Version:   15.1.0
+[debug] [2026-01-05T11:23:58.556Z] Platform:      darwin
+[debug] [2026-01-05T11:23:58.556Z] Node Version:  v25.2.1
+[debug] [2026-01-05T11:23:58.556Z] Time:          Mon Jan 05 2026 17:23:58 GMT+0600 (Bangladesh Standard Time)
+[debug] [2026-01-05T11:23:58.556Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-01-05T11:23:59.252Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-05T11:23:59.252Z] > authorizing via signed-in user (nayeem.ahmad@gmail.com)
+[debug] [2026-01-05T11:23:59.252Z] [iam] checking project scrum71 for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-01-05T11:23:59.253Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:23:59.253Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:23:59.253Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/scrum71:testIamPermissions [none]
+[debug] [2026-01-05T11:23:59.253Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/scrum71:testIamPermissions x-goog-quota-user=projects/scrum71
+[debug] [2026-01-05T11:23:59.253Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/scrum71:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-01-05T11:24:00.664Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/scrum71:testIamPermissions 200
+[debug] [2026-01-05T11:24:00.664Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/scrum71:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-01-05T11:24:00.664Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:00.665Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:00.665Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/scrum71 [none]
+[debug] [2026-01-05T11:24:01.097Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/scrum71 200
+[debug] [2026-01-05T11:24:01.097Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/scrum71 {"projectId":"scrum71","projectNumber":"744464444206","displayName":"scrum71","name":"projects/scrum71","resources":{"hostingSite":"scrum71"},"state":"ACTIVE","etag":"1_a2097854-8f14-4097-a464-c4178638c932"}
+[info] 
+[info] === Deploying to 'scrum71'...
+[info] 
+[info] i  deploying firestore, hosting 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-01-05T11:24:01.099Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:01.099Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:01.099Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/scrum71/services/firestore.googleapis.com [none]
+[debug] [2026-01-05T11:24:01.099Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/scrum71/services/firestore.googleapis.com x-goog-quota-user=projects/scrum71
+[debug] [2026-01-05T11:24:02.895Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/scrum71/services/firestore.googleapis.com 200
+[debug] [2026-01-05T11:24:02.895Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/scrum71/services/firestore.googleapis.com [omitted]
+[info] ✔  firestore: required API firestore.googleapis.com is enabled 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-01-05T11:24:02.902Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:02.902Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:02.902Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/scrum71/databases/(default) [none]
+[debug] [2026-01-05T11:24:04.504Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/scrum71/databases/(default) 200
+[debug] [2026-01-05T11:24:04.504Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/scrum71/databases/(default) {"name":"projects/scrum71/databases/(default)","uid":"3eb2cbb7-0383-434b-942f-9227cf91b2e6","createTime":"2026-01-05T11:13:28.641376Z","updateTime":"2026-01-05T11:13:28.641376Z","locationId":"nam5","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2026-01-05T11:13:28.641376Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"s","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"IJHOpt+k9JEDMPX4h6+j9JED"}
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2026-01-05T11:24:04.505Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:04.505Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:04.505Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/scrum71:test [none]
+[debug] [2026-01-05T11:24:04.505Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/scrum71:test [omitted]
+[debug] [2026-01-05T11:24:08.134Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/scrum71:test 200
+[debug] [2026-01-05T11:24:08.134Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/scrum71:test {}
+[info] ✔  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2026-01-05T11:24:08.137Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:08.137Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:08.137Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/scrum71/versions [none]
+[debug] [2026-01-05T11:24:08.137Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/scrum71/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2026-01-05T11:24:09.939Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/scrum71/versions 200
+[debug] [2026-01-05T11:24:09.939Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/scrum71/versions {"name":"projects/744464444206/sites/scrum71/versions/a2e06e5a988d6001","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2026-01-05T11:24:09.940Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:09.940Z] Checked if tokens are valid: true, expires at: 1767614675092
+[debug] [2026-01-05T11:24:09.940Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/scrum71/releases pageSize=10&pageToken=
