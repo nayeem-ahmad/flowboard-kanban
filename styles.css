@@ -31,6 +31,7 @@
     --transition-fast: 150ms ease;
     --transition-base: 200ms ease;
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --card-bg: #ffffff;
     --board-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
@@ -43,8 +44,9 @@
     --text-secondary: #cbd5e1;
     --text-tertiary: #64748b;
     --border-color: #334155;
-    --glass-bg: rgba(30, 41, 59, 0.8);
+    --glass-bg: rgba(30, 41, 59, 0.95);
     --glass-border: rgba(51, 65, 85, 0.5);
+    --card-bg: #334155;
 }
 
 *,
@@ -152,6 +154,12 @@ button {
 .board-selector-btn:hover {
     border-color: var(--accent-primary);
     box-shadow: var(--shadow-md);
+}
+
+.board-selector-btn.active {
+    background: var(--accent-primary);
+    color: var(--text-inverse);
+    border-color: var(--accent-primary);
 }
 
 .chevron-icon {
@@ -556,7 +564,7 @@ button {
 
 /* Card Styles */
 .card {
-    background: var(--bg-secondary);
+    background: var(--card-bg);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     cursor: pointer;
@@ -2430,6 +2438,7 @@ button {
     color: var(--success);
     background: rgba(34, 197, 94, 0.1);
 }
+
 /* Burndown Panel */
 .burndown-panel {
     position: fixed;
@@ -2532,4 +2541,290 @@ button {
     backdrop-filter: blur(10px);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-lg);
+}
+
+/* =========================================
+   Project Management Screen
+   ========================================= */
+
+.project-management-screen {
+    padding-top: 60px;
+    min-height: 100vh;
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+}
+
+.project-management-screen.hidden {
+    display: none;
+}
+
+.pm-container {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - 60px);
+}
+
+/* Sidebar */
+.pm-sidebar {
+    width: 280px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.pm-sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pm-sidebar-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.pm-project-list {
+    list-style: none;
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.pm-project-item {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    transition: background var(--transition-fast);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pm-project-item:hover {
+    background: var(--bg-hover);
+}
+
+.pm-project-item.active {
+    background: var(--accent-primary);
+    color: var(--text-inverse);
+}
+
+/* Content Area */
+.pm-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    position: relative;
+    background: var(--bg-primary);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: var(--text-tertiary);
+}
+
+.empty-state-icon svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1rem;
+    color: var(--border-color);
+}
+
+/* Project Details */
+.pm-project-details.hidden {
+    display: none;
+}
+
+.pm-header {
+    margin-bottom: 2rem;
+}
+
+.pm-title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.pm-title-section h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.pm-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1px;
+}
+
+.pm-tab {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: none;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all var(--transition-fast);
+}
+
+.pm-tab:hover {
+    color: var(--text-primary);
+}
+
+.pm-tab.active {
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+}
+
+.pm-tab-pane {
+    display: none;
+}
+
+.pm-tab-pane.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pm-pane-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.pm-pane-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.pm-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Sprint Item */
+.pm-sprint-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.pm-sprint-item:hover {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.pm-sprint-color-strip {
+    height: 6px;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.pm-sprint-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.pm-sprint-dates {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Backlog */
+.backlog-input-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.backlog-input-container input {
+    flex: 1;
+}
+
+.backlog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.backlog-item {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.backlog-item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Team in PM */
+.pm-team-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.pm-team-member {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.pm-team-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.empty-state.hidden {
+    display: none !important;
 }
