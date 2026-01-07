@@ -1,8 +1,5 @@
 import { state, getCurrentBoard, saveState, getOrCreateInviteToken, generateInviteToken, getCurrentUser } from './store.js';
 import { generateId, showToast, getDragAfterElement } from './utils.js';
-import { updateInviteLinkInput } from './app.js'; // Circular dependency risk? We'll see.
-// Actually app.js needs to import board, so board shouldn't import app.
-// I'll move updateInviteLinkInput to here or a separate file.
 
 // ================================
 // BOARD RENDERING
