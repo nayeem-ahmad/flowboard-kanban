@@ -747,6 +747,9 @@ button {
 
 .modal-lg {
     max-width: 720px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-header {
@@ -785,6 +788,9 @@ button {
 
 .modal-body {
     padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(85vh - 140px);
 }
 
 .modal-footer {
@@ -2392,6 +2398,16 @@ button {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+}
+
+/* Time Tracking Inline (for card modal main content) */
+.time-tracking-inline {
+    display: flex;
+    gap: 1rem;
+}
+
+.time-tracking-inline .time-input-group {
+    flex: 1;
 }
 
 .time-input-group {
