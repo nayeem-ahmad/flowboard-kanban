@@ -24,6 +24,7 @@ No starter template is used. The architecture preserves this lightweight approac
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-01-09 | 1.0.0 | Initial architecture document | Architecture Team |
+| 2026-01-09 | 1.1.0 | Added error handling, testing strategy, input validation, accessibility guidelines | Architecture Team |
 
 ---
 
@@ -134,7 +135,7 @@ graph TB
 | **Authentication** | Firebase Auth | v10.7.0 | User authentication | OAuth providers, email/password, session management |
 | **File Storage** | Firebase Storage | v10.7.0 | File attachments | Direct browser uploads, CDN delivery, Firebase integration |
 | **Hosting** | Firebase Hosting | Latest | Static site hosting | Fast CDN, automatic SSL, easy deployment |
-| **Charts** | Chart.js | v4.x (CDN) | Burndown visualization | Lightweight, responsive, easy to configure |
+| **Charts** | Chart.js | 4.4.1 | Burndown visualization | Lightweight, responsive, easy to configure |
 | **Fonts** | Google Fonts (Inter) | Latest | Typography | Modern, readable, variable font support |
 
 ---
@@ -802,6 +803,294 @@ The app can also be deployed to GitHub Pages:
 1. Push to `main` branch
 2. Enable GitHub Pages in repository settings
 3. Set source to root directory
+
+---
+
+## Error Handling Strategy
+
+Consistent error handling across all modules ensures a good user experience and easier debugging.
+
+### Error Categories
+
+| Category | Example | Handling Approach |
+|----------|---------|-------------------|
+| **Network Errors** | Firestore offline, timeout | Show toast, use localStorage fallback, retry with exponential backoff |
+| **Auth Errors** | Invalid credentials, session expired | Show specific error message, redirect to login if needed |
+| **Permission Errors** | Firestore rules denied | Show "Access denied" toast, log for debugging |
+| **Validation Errors** | Empty title, invalid date | Inline field validation, prevent submission |
+| **Storage Errors** | Upload failed, file too large | Show error toast with specific message |
+
+### Error Handling Patterns
+
+```javascript
+// Pattern 1: Try-catch with user feedback
+try {
+    await db.collection('boards').doc(boardId).set(data);
+    showToast('Board saved!', 'success');
+} catch (error) {
+    console.error('Save failed:', error);
+    if (error.code === 'permission-denied') {
+        showToast('You don\'t have permission to edit this board', 'error');
+    } else if (error.code === 'unavailable') {
+        showToast('Offline - changes saved locally', 'warning');
+        saveToLocalStorage(data);
+    } else {
+        showToast('Failed to save. Please try again.', 'error');
+    }
+}
+
+// Pattern 2: Auth error handling
+auth.onAuthStateChanged((user) => {
+    if (!user) {
+        // Session expired or logged out
+        clearLocalState();
+        showAuthScreen();
+    }
+});
+
+// Pattern 3: Graceful degradation
+const loadBoard = async (boardId) => {
+    try {
+        const doc = await db.collection('boards').doc(boardId).get();
+        return doc.data();
+    } catch (error) {
+        console.warn('Firestore unavailable, using cache:', error);
+        return getFromLocalStorage(boardId);
+    }
+};
+```
+
+### Module-Specific Error Handling
+
+| Module | Key Error Scenarios | Handling |
+|--------|---------------------|----------|
+| `auth.js` | Login failure, OAuth popup blocked, password reset | Show specific error messages, offer alternatives |
+| `store.js` | Firestore sync failure, quota exceeded | Fallback to localStorage, queue for retry |
+| `board.js` | Drag-drop state inconsistency, render failure | Re-render board, show error toast |
+| `project.js` | Invite link invalid, member add failure | Validate before action, show clear errors |
+
+---
+
+## Input Validation
+
+All user inputs must be validated before processing.
+
+### Validation Rules
+
+| Field | Rules | Error Message |
+|-------|-------|---------------|
+| Card Title | Required, max 500 chars | "Title is required" / "Title too long" |
+| Card Description | Max 5000 chars, sanitize HTML | "Description too long" |
+| Board Name | Required, max 100 chars | "Board name is required" |
+| Project Name | Required, max 100 chars | "Project name is required" |
+| Due Date | Valid ISO date, not in past (optional) | "Invalid date format" |
+| Time Estimate | Number >= 0, max 999 | "Must be a positive number" |
+| Email (invite) | Valid email format | "Invalid email address" |
+| File Upload | Max 10MB, allowed types: image/*, .pdf, .doc, .docx | "File too large" / "File type not allowed" |
+
+### Validation Implementation
+
+```javascript
+// Validation utility functions
+export const validators = {
+    required: (value) => value?.trim().length > 0,
+    maxLength: (value, max) => value?.length <= max,
+    isEmail: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+    isPositiveNumber: (value) => !isNaN(value) && Number(value) >= 0,
+    isValidDate: (value) => !isNaN(Date.parse(value)),
+    maxFileSize: (file, maxMB) => file.size <= maxMB * 1024 * 1024,
+    allowedFileType: (file, types) => types.some(t => file.type.match(t))
+};
+
+// Usage example
+const validateCard = (card) => {
+    const errors = [];
+    if (!validators.required(card.title)) errors.push('Title is required');
+    if (!validators.maxLength(card.title, 500)) errors.push('Title too long');
+    if (card.description && !validators.maxLength(card.description, 5000)) {
+        errors.push('Description too long');
+    }
+    return errors;
+};
+```
+
+---
+
+## Testing Strategy
+
+### Testing Levels
+
+| Level | Scope | Tools | Coverage Target |
+|-------|-------|-------|----------------|
+| **Manual Testing** | Critical user flows | Browser DevTools | All features |
+| **Unit Testing** | Utility functions, validators | Vitest (future) | 80% of utils.js |
+| **Integration Testing** | Firebase operations | Vitest + Firebase Emulator | Core CRUD ops |
+| **E2E Testing** | User journeys | Playwright (future) | Critical paths |
+
+### Manual Testing Checklist
+
+**Authentication:**
+- [ ] Email/password registration
+- [ ] Email/password login
+- [ ] Google OAuth login
+- [ ] GitHub OAuth login
+- [ ] Password reset flow
+- [ ] Session persistence across refresh
+- [ ] Logout clears state
+
+**Board Operations:**
+- [ ] Create new board
+- [ ] Switch between boards
+- [ ] Change board background
+- [ ] Delete board
+
+**List Operations:**
+- [ ] Add list
+- [ ] Rename list (inline edit)
+- [ ] Reorder lists (drag)
+- [ ] Delete list
+- [ ] Copy list
+- [ ] Clear list cards
+
+**Card Operations:**
+- [ ] Add card (quick add)
+- [ ] Edit card (modal)
+- [ ] Drag card between lists
+- [ ] Drag card within list (reorder)
+- [ ] Add/complete checklist items
+- [ ] Set due date
+- [ ] Add labels
+- [ ] Set assignee
+- [ ] Time tracking fields
+- [ ] Duplicate card
+- [ ] Delete card
+
+**Project & Team:**
+- [ ] Create project
+- [ ] Switch projects
+- [ ] Generate invite link
+- [ ] Join via invite link
+- [ ] View team members
+
+**Burndown Chart:**
+- [ ] Chart displays with data
+- [ ] Updates when hours change
+- [ ] Collapse/expand panel
+
+**Offline & Sync:**
+- [ ] Works offline (localStorage)
+- [ ] Syncs when online
+- [ ] Multi-tab consistency
+
+**Theme:**
+- [ ] Toggle light/dark mode
+- [ ] Persists across sessions
+- [ ] Respects system preference
+
+### Automated Testing (Future)
+
+```javascript
+// Example unit tests for utils.js (Vitest)
+import { describe, it, expect } from 'vitest';
+import { generateId, validators } from './utils.js';
+
+describe('generateId', () => {
+    it('returns a string', () => {
+        expect(typeof generateId()).toBe('string');
+    });
+    it('returns unique values', () => {
+        const ids = new Set(Array(100).fill(0).map(() => generateId()));
+        expect(ids.size).toBe(100);
+    });
+});
+
+describe('validators', () => {
+    it('validates required fields', () => {
+        expect(validators.required('test')).toBe(true);
+        expect(validators.required('')).toBe(false);
+        expect(validators.required('   ')).toBe(false);
+    });
+    it('validates email format', () => {
+        expect(validators.isEmail('user@example.com')).toBe(true);
+        expect(validators.isEmail('invalid')).toBe(false);
+    });
+});
+```
+
+---
+
+## Accessibility Guidelines
+
+### WCAG 2.1 AA Compliance
+
+This application targets WCAG 2.1 Level AA compliance.
+
+### Semantic HTML Requirements
+
+| Element | Requirement |
+|---------|-------------|
+| Modals | Use `role="dialog"`, `aria-modal="true"`, `aria-labelledby` |
+| Buttons | Use `<button>` not `<div>`, include `aria-label` for icon-only |
+| Forms | Associate `<label>` with inputs via `for` attribute |
+| Lists | Use `<ul>`/`<li>` for board lists, cards |
+| Headings | Maintain proper hierarchy (h1 > h2 > h3) |
+
+### Keyboard Navigation
+
+| Action | Keyboard Shortcut |
+|--------|-------------------|
+| Open search | `Cmd/Ctrl + K` |
+| Close modal | `Escape` |
+| Navigate dropdowns | `Arrow Up/Down` |
+| Select option | `Enter` |
+| Tab through elements | `Tab` / `Shift+Tab` |
+
+### Focus Management
+
+```javascript
+// Modal focus trap pattern
+const openModal = (modalEl) => {
+    modalEl.classList.add('active');
+    const focusableEls = modalEl.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstEl = focusableEls[0];
+    const lastEl = focusableEls[focusableEls.length - 1];
+    
+    firstEl.focus();
+    
+    modalEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+            if (e.shiftKey && document.activeElement === firstEl) {
+                e.preventDefault();
+                lastEl.focus();
+            } else if (!e.shiftKey && document.activeElement === lastEl) {
+                e.preventDefault();
+                firstEl.focus();
+            }
+        }
+        if (e.key === 'Escape') closeModal(modalEl);
+    });
+};
+```
+
+### ARIA Attributes Reference
+
+| Component | Required ARIA |
+|-----------|---------------|
+| Card Modal | `role="dialog"`, `aria-modal="true"`, `aria-labelledby="cardTitle"` |
+| Search Modal | `role="dialog"`, `aria-label="Search cards"` |
+| Board Selector | `aria-haspopup="listbox"`, `aria-expanded` |
+| Toast Notifications | `role="alert"`, `aria-live="polite"` |
+| Theme Toggle | `aria-label="Toggle dark mode"`, `aria-pressed` |
+| Checklist Items | `role="checkbox"`, `aria-checked` |
+
+### Color Contrast
+
+- Text on backgrounds: minimum 4.5:1 ratio
+- Large text (18px+): minimum 3:1 ratio
+- UI components: minimum 3:1 ratio against adjacent colors
+- Use CSS custom properties for consistent theming
 
 ---
 
