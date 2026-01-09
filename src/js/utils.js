@@ -59,3 +59,11 @@ export const getDragAfterElement = (container, y) => {
         return closest;
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 };
+
+export const calculateListTotals = (list) => {
+    const cards = list?.cards || []; // Safely get cards, default to empty array
+    return {
+        initial: cards.reduce((sum, card) => sum + (card.initialEstimate || 0), 0),
+        remaining: cards.reduce((sum, card) => sum + (card.remainingHours || 0), 0)
+    };
+};

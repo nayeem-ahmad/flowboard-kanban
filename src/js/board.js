@@ -1,5 +1,5 @@
 import { state, getCurrentBoard, saveState, getOrCreateInviteToken, generateInviteToken, getCurrentUser } from './store.js';
-import { generateId, showToast, getDragAfterElement } from './utils.js';
+import { generateId, showToast, getDragAfterElement, calculateListTotals } from './utils.js';
 import { updateBoardInfoInHeader } from './app.js';
 
 // ================================
@@ -99,12 +99,6 @@ export const updateSelectorTexts = () => {
 // ================================
 // LIST ELEMENT
 // ================================
-const calculateListTotals = (list) => {
-    return {
-        initial: list.cards.reduce((sum, card) => sum + (card.initialEstimate || 0), 0),
-        remaining: list.cards.reduce((sum, card) => sum + (card.remainingHours || 0), 0)
-    };
-};
 
 export const createListElement = (list) => {
     const board = getCurrentBoard();
