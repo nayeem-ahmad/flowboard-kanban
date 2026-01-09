@@ -1,7 +1,7 @@
 # Story 2.3: Project Backlog Management
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** product owner,  

@@ -405,17 +405,59 @@ const renderSprints = (project) => {
 
 const renderBacklog = (project) => {
     const listEl = document.getElementById('backlogList');
-    listEl.innerHTML = (project.backlog || []).map(task => `
-        <div class="backlog-item">
-             <span>${task.title}</span>
-             <button class="btn-icon" data-id="${task.id}" title="Move to Sprint">
-                 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2"/></svg>
-             </button>
+    listEl.innerHTML = (project.backlog || []).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt)).map(task => `
+        <div class="backlog-item" data-id="${task.id}">
+             <div class="backlog-item-content">
+                 <div class="backlog-item-title" contenteditable="true">${task.title}</div>
+                 <div class="backlog-item-meta">Added: ${new Date(task.addedAt).toLocaleDateString()}</div>
+             </div>
+             <div class="backlog-actions">
+                 <button class="btn-icon move-to-sprint-btn" data-id="${task.id}" title="Move to Sprint">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                 </button>
+                 <button class="btn-icon danger delete-backlog-btn" data-id="${task.id}" title="Delete">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                 </button>
+             </div>
         </div>
     `).join('');
 
-    // Add logic to move to sprint...
-    listEl.querySelectorAll('button').forEach(btn => {
+    // Edit Title (ContentEditable)
+    listEl.querySelectorAll('.backlog-item-title').forEach(el => {
+        el.addEventListener('blur', () => {
+            const taskId = el.closest('.backlog-item').dataset.id;
+            const task = project.backlog.find(t => t.id === taskId);
+            if (task && el.textContent.trim() !== task.title) {
+                task.title = el.textContent.trim();
+                saveState();
+                showToast('Task updated', 'success');
+            } else if (task) {
+                el.textContent = task.title; // Revert if empty
+            }
+        });
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                el.blur();
+            }
+        });
+    });
+
+    // Delete Logic
+    listEl.querySelectorAll('.delete-backlog-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (confirm('Delete this backlog item?')) {
+                const taskId = btn.dataset.id;
+                project.backlog = project.backlog.filter(t => t.id !== taskId);
+                saveState();
+                renderBacklog(project);
+                showToast('Task deleted', 'success');
+            }
+        });
+    });
+
+    // Move to Sprint Logic
+    listEl.querySelectorAll('.move-to-sprint-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const taskId = btn.dataset.id;
             const taskIdx = project.backlog.findIndex(t => t.id === taskId);
@@ -429,8 +471,14 @@ const renderBacklog = (project) => {
                     target.lists[0].cards.push({
                         id: generateId(),
                         title: task.title,
+                        description: '', // Initialize description
                         labels: [],
-                        checklist: []
+                        checklist: [],
+                        comments: [],
+                        attachments: [],
+                        initialEstimate: 0,
+                        remainingHours: 0,
+                        createdAt: new Date().toISOString()
                         // ... defaults
                     });
                     project.backlog.splice(taskIdx, 1);

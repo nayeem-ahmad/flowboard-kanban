@@ -1,7 +1,7 @@
 # Story 2.5: Add Backlog Items to Sprint
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** product owner,  
