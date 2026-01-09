@@ -107,6 +107,7 @@ export const initAuth = () => {
                     const { initTheme } = module;
                     if (initTheme) initTheme();
                     renderBoard();
+                    window.dispatchEvent(new Event('appReady')); // Trigger deep link check
                 });
 
                 if (state.boards.length === 0) {

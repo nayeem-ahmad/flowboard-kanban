@@ -189,6 +189,8 @@ window.addEventListener('openCardModal', (e) => {
     renderComments(card);
     renderAttachments(card);
     renderChecklist(card);
+    
+    addCopyLinkBtn(); // Add the copy link button
 
     cardModal.classList.add('active');
 });
@@ -605,6 +607,73 @@ export const updateBoardInfoInHeader = () => {
         boardInfoEl.style.display = 'none'; // Hide if no board selected
     }
 };
+
+// Check for Card ID in URL (Deep Linking)
+const checkCardInURL = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const cardId = urlParams.get('card');
+    
+    if (cardId) {
+        // Find card in all boards
+        for (const board of state.boards) {
+            for (const list of board.lists) {
+                const card = list.cards.find(c => c.id === cardId);
+                if (card) {
+                    state.currentBoardId = board.id;
+                    if (board.projectId) state.currentProjectId = board.projectId;
+                    saveState();
+                    renderBoard();
+                    
+                    // Open Modal
+                    window.dispatchEvent(new CustomEvent('openCardModal', { detail: { cardId, listId: list.id } }));
+                    return;
+                }
+            }
+        }
+        showToast('Card not found', 'error');
+    }
+};
+
+// Add Copy Link Button to Card Modal logic
+const addCopyLinkBtn = () => {
+    const header = cardModal.querySelector('.card-modal-title');
+    if (header.querySelector('.copy-card-link-btn')) return; // Already added
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-icon copy-card-link-btn';
+    copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
+    copyBtn.title = "Copy Link to Card";
+    copyBtn.style.marginLeft = '10px';
+    
+    copyBtn.addEventListener('click', async () => {
+        if (!currentEditingCard) return;
+        const url = new URL(window.location.href);
+        url.searchParams.set('card', currentEditingCard.id);
+        
+        try {
+            await navigator.clipboard.writeText(url.toString());
+            showToast('Link copied to clipboard', 'success');
+        } catch (err) {
+            showToast('Failed to copy link', 'error');
+        }
+    });
+
+    header.appendChild(copyBtn);
+};
+
+// Hook into openCardModal to add the button
+const originalOpenCardModal = window.dispatchEvent; 
+// We can't easily hook dispatchEvent. 
+// Instead, we modify the existing event listener or add a new one that runs after.
+// Since we have the listener defined above, let's call addCopyLinkBtn inside it.
+// I'll update the listener block in the next replacement.
+
+// Call checkCardInURL on init
+// We need to call this after state is loaded. 
+// In initAuth -> loadState -> renderBoard -> (then check card)
+// I'll add an event listener for a new event 'appReady' or similar, or just call it if we modify initAuth.
+// For now, let's export it and call it from initAuth in auth.js if possible, or listen for a custom event.
+window.addEventListener('appReady', checkCardInURL);
 
 // Edit Board button in header
 document.getElementById('boardInfo')?.addEventListener('click', () => {

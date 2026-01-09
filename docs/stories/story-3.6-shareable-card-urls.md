@@ -1,7 +1,7 @@
 # Story 3.6: Shareable Card URLs
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  
