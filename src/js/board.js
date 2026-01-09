@@ -354,12 +354,20 @@ export const createCardElement = (card, listId) => {
         `;
     }
 
+    const timeBadgeHtml = (card.remainingHours || 0) > 0 ? `
+        <div class="card-badge" title="${card.remainingHours} remaining hours">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+            ${card.remainingHours}h
+        </div>
+    ` : '';
+
     cardEl.innerHTML = `
         ${labelsHtml}
         <div class="card-content">
             <div class="card-title-text">${card.title}</div>
             <div class="card-meta">
                 ${dueDateHtml}
+                ${timeBadgeHtml}
                 ${checklistHtml}
                 ${commentsHtml}
                 ${attachmentsHtml}

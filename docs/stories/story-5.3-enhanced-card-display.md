@@ -1,7 +1,7 @@
 # Story 5.3: Enhanced Card Display
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  
