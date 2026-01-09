@@ -1,5 +1,6 @@
 import { state, getCurrentBoard, saveState, getOrCreateInviteToken, generateInviteToken, getCurrentUser } from './store.js';
 import { generateId, showToast, getDragAfterElement } from './utils.js';
+import { updateBoardInfoInHeader } from './app.js';
 
 // ================================
 // BOARD RENDERING
@@ -10,6 +11,7 @@ const currentBoardName = document.getElementById('currentBoardName');
 
 export const renderBoard = () => {
     updateSelectorTexts();
+    updateBoardInfoInHeader(); // Call this here to update header info
     const board = getCurrentBoard();
 
     if (!boardElement) return;
@@ -286,20 +288,14 @@ export const createCardElement = (card, listId) => {
     cardEl.dataset.cardId = card.id;
     cardEl.draggable = true;
 
-    // ... (rest of createCardElement logic from app.js)
-    // Simplified for brevity in this Artifact, but assumed full implementation
-    const labelColors = {
-        'priority-high': '#ef4444',
-        'priority-medium': '#f59e0b',
-        'priority-low': '#22c55e',
-        'bug': '#dc2626',
-        'feature': '#8b5cf6',
-        'improvement': '#06b6d4'
-    };
+    const project = state.projects.find(p => p.id === state.currentProjectId);
+    const projectLabels = project ? project.labels : [];
 
-    const labelsHtml = card.labels.length ? `
+    const cardLabelsData = (card.labels || []).map(labelId => projectLabels.find(pl => pl.id === labelId)).filter(Boolean);
+
+    const labelsHtml = cardLabelsData.length ? `
         <div class="card-labels">
-            ${card.labels.map(l => `<div class="card-label" style="background: ${labelColors[l]}"></div>`).join('')}
+            ${cardLabelsData.map(label => `<div class="card-label" style="background: ${label.color}" title="${label.name}"></div>`).join('')}
         </div>
     ` : '';
 

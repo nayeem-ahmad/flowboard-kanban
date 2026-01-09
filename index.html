@@ -66,6 +66,10 @@
                     </button>
                 </div>
             </div>
+            <div class="board-info" id="boardInfo" style="display: none;">
+                <span id="currentBoardGoal" class="board-goal"></span>
+                <span id="currentBoardDates" class="board-dates"></span>
+            </div>
             <button class="board-selector-btn" id="manageProjectsBtn">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
                     style="width: 16px; height: 16px;">
@@ -135,6 +139,18 @@
                 <div class="form-group">
                     <label for="boardName">Board Name</label>
                     <input type="text" id="boardName" placeholder="Enter board name..." class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="boardGoal">Sprint Goal</label>
+                    <textarea id="boardGoal" class="form-input" placeholder="Enter sprint goal..." rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="boardStartDate">Start Date</label>
+                    <input type="date" id="boardStartDate" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="boardEndDate">End Date</label>
+                    <input type="date" id="boardEndDate" class="form-input">
                 </div>
                 <div class="form-group">
                     <label>Background Color</label>
@@ -723,6 +739,7 @@
                             <button class="pm-tab active" data-tab="backlog">Backlog</button>
                             <button class="pm-tab" data-tab="sprints">Sprints</button>
                             <button class="pm-tab" data-tab="team">Team</button>
+                            <button class="pm-tab" data-tab="labels">Labels</button>
                         </div>
                     </div>
 
@@ -777,6 +794,24 @@
                             </div>
                             <div class="pm-team-list" id="pmTeamList">
                                 <!-- Team members -->
+                            </div>
+                        </div>
+
+                        <!-- Labels Tab -->
+                        <div id="pmTabLabels" class="pm-tab-pane">
+                            <div class="pm-pane-header">
+                                <h3>Project Labels</h3>
+                                <button class="btn btn-primary" id="addLabelBtn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    Add Label
+                                </button>
+                            </div>
+                            <div class="pm-labels-list" id="pmLabelsList">
+                                <!-- Labels will be dynamically rendered here -->
                             </div>
                         </div>
                     </div>

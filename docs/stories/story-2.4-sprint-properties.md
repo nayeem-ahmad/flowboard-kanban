@@ -1,7 +1,7 @@
 # Story 2.4: Sprint Properties (Dates and Goal)
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** scrum master,  

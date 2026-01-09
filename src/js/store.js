@@ -27,6 +27,10 @@ export const initializeSampleData = () => {
         id: generateId(),
         name: 'My Project Board',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        goal: 'To complete initial MVP features for project management',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+        inviteToken: generateInviteToken(),
         owner: {
             id: 'owner-1',
             name: 'You',
@@ -56,32 +60,32 @@ export const initializeSampleData = () => {
                 id: generateId(),
                 title: 'To Do',
                 cards: [
-                    { id: generateId(), title: 'Research competitor products', description: 'Analyze top 5 competitors', labels: ['priority-high'], dueDate: '2026-01-10', checklist: [{ id: generateId(), text: 'Find competitors', completed: true }, { id: generateId(), text: 'Analyze features', completed: false }], initialEstimate: 8, remainingHours: 5 },
-                    { id: generateId(), title: 'Design homepage mockup', description: 'Create wireframes and high-fidelity designs', labels: ['feature'], dueDate: '', checklist: [], initialEstimate: 16, remainingHours: 16 },
-                    { id: generateId(), title: 'Set up development environment', description: '', labels: ['improvement'], dueDate: '2026-01-08', checklist: [], initialEstimate: 4, remainingHours: 2 }
+                    { id: generateId(), title: 'Research competitor products', description: 'Analyze top 5 competitors', labels: ['priority-high'], dueDate: '2026-01-10', checklist: [{ id: generateId(), text: 'Find competitors', completed: true }, { id: generateId(), text: 'Analyze features', completed: false }], initialEstimate: 8, remainingHours: 5, comments: [], attachments: [] },
+                    { id: generateId(), title: 'Design homepage mockup', description: 'Create wireframes and high-fidelity designs', labels: ['feature'], dueDate: '', checklist: [], initialEstimate: 16, remainingHours: 16, comments: [], attachments: [] },
+                    { id: generateId(), title: 'Set up development environment', description: '', labels: ['improvement'], dueDate: '2026-01-08', checklist: [], initialEstimate: 4, remainingHours: 2, comments: [], attachments: [] }
                 ]
             },
             {
                 id: generateId(),
                 title: 'In Progress',
                 cards: [
-                    { id: generateId(), title: 'Implement user authentication', description: 'OAuth2 and email/password login', labels: ['feature', 'priority-medium'], dueDate: '2026-01-15', checklist: [{ id: generateId(), text: 'Set up OAuth', completed: true }, { id: generateId(), text: 'Email verification', completed: false }], initialEstimate: 24, remainingHours: 12 },
-                    { id: generateId(), title: 'Create database schema', description: 'PostgreSQL with proper indexing', labels: ['priority-high'], dueDate: '', checklist: [], initialEstimate: 8, remainingHours: 6 }
+                    { id: generateId(), title: 'Implement user authentication', description: 'OAuth2 and email/password login', labels: ['feature', 'priority-medium'], dueDate: '2026-01-15', checklist: [{ id: generateId(), text: 'Set up OAuth', completed: true }, { id: generateId(), text: 'Email verification', completed: false }], initialEstimate: 24, remainingHours: 12, comments: [], attachments: [] },
+                    { id: generateId(), title: 'Create database schema', description: 'PostgreSQL with proper indexing', labels: ['priority-high'], dueDate: '', checklist: [], initialEstimate: 8, remainingHours: 6, comments: [], attachments: [] }
                 ]
             },
             {
                 id: generateId(),
                 title: 'Review',
                 cards: [
-                    { id: generateId(), title: 'API documentation', description: 'Swagger/OpenAPI specs', labels: ['improvement'], dueDate: '2026-01-07', checklist: [], initialEstimate: 6, remainingHours: 3 }
+                    { id: generateId(), title: 'API documentation', description: 'Swagger/OpenAPI specs', labels: ['improvement'], dueDate: '2026-01-07', checklist: [], initialEstimate: 6, remainingHours: 3, comments: [], attachments: [] }
                 ]
             },
             {
                 id: generateId(),
                 title: 'Done',
                 cards: [
-                    { id: generateId(), title: 'Project setup', description: 'Initial configuration complete', labels: ['priority-low'], dueDate: '', checklist: [], initialEstimate: 2, remainingHours: 0 },
-                    { id: generateId(), title: 'Team kickoff meeting', description: 'Introductions and project overview', labels: [], dueDate: '', checklist: [], initialEstimate: 1, remainingHours: 0 }
+                    { id: generateId(), title: 'Project setup', description: 'Initial configuration complete', labels: ['priority-low'], dueDate: '', checklist: [], initialEstimate: 2, remainingHours: 0, comments: [], attachments: [] },
+                    { id: generateId(), title: 'Team kickoff meeting', description: 'Introductions and project overview', labels: [], dueDate: '', checklist: [], initialEstimate: 1, remainingHours: 0, comments: [], attachments: [] }
                 ]
             }
         ],
@@ -102,12 +106,19 @@ export const initializeSampleData = () => {
         backlog: [
             { id: generateId(), title: 'Explore microservices architecture', addedAt: new Date().toISOString() }
         ],
-        sprintIds: [sampleBoard.id]
+        sprintIds: [sampleBoard.id],
+        labels: [
+            { id: 'priority-high', color: '#ef4444', name: 'High Priority', description: 'Immediate attention needed' },
+            { id: 'priority-medium', color: '#f59e0b', name: 'Medium Priority', description: 'Important, but not critical' },
+            { id: 'priority-low', color: '#22c55e', name: 'Low Priority', description: 'Can be done later' },
+            { id: 'bug', color: '#dc2626', name: 'Bug', description: 'Defect or error' },
+            { id: 'feature', color: '#8b5cf6', name: 'Feature', description: 'New functionality' },
+            { id: 'improvement', color: '#06b6d4', name: 'Improvement', description: 'Enhancement to existing functionality' }
+        ]
     };
 
     sampleBoard.projectId = sampleProject.id;
-    sampleBoard.startDate = new Date().toISOString().split('T')[0];
-    sampleBoard.endDate = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+
 
     state.boards = [sampleBoard];
     state.projects = [sampleProject];

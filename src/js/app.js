@@ -102,29 +102,226 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
 });
 
 // Modal Events (Custom Events)
+let currentEditingCard = null; // To store the card being edited
+
+const cardModal = document.getElementById('cardModal');
+const cardTitleInput = document.getElementById('cardTitle');
+const cardDescriptionInput = document.getElementById('cardDescription');
+const cardInitialEstimateInput = document.getElementById('cardInitialEstimate');
+const cardRemainingHoursInput = document.getElementById('cardRemainingHours');
+const checklistContainer = document.getElementById('checklist');
+const newChecklistItemInput = document.getElementById('newChecklistItem');
+const addChecklistItemBtn = document.getElementById('addChecklistItemBtn');
+const labelPicker = document.getElementById('labelPicker');
+const cardDueDateInput = document.getElementById('cardDueDate');
+const cardAssigneeSelect = document.getElementById('cardAssignee');
+const duplicateCardBtn = document.getElementById('duplicateCardBtn');
+const deleteCardBtn = document.getElementById('deleteCardBtn');
+const saveCardBtn = cardModal.querySelector('#saveCardBtn');
+const cancelCardBtn = cardModal.querySelector('#cancelCardBtn');
+
+const renderLabelPicker = (selectedLabels) => {
+    const project = state.projects.find(p => p.id === state.currentProjectId);
+    if (!project || !labelPicker) return;
+
+    labelPicker.innerHTML = project.labels.map(label => `
+        <button class="label-option ${selectedLabels.includes(label.id) ? 'selected' : ''}"
+            data-label-id="${label.id}" data-color="${label.color}" title="${label.description}">
+            <span class="label-color" style="background: ${label.color}"></span>
+            ${label.name}
+        </button>
+    `).join('');
+
+    labelPicker.querySelectorAll('.label-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('selected');
+            const labelId = btn.dataset.labelId;
+            if (currentEditingCard) {
+                if (btn.classList.contains('selected')) {
+                    if (!currentEditingCard.labels.includes(labelId)) {
+                        currentEditingCard.labels.push(labelId);
+                    }
+                } else {
+                    currentEditingCard.labels = currentEditingCard.labels.filter(id => id !== labelId);
+                }
+                // No need to saveState here, will be saved by saveCardBtn
+            }
+        });
+    });
+};
+
 window.addEventListener('openCardModal', (e) => {
     const { cardId, listId } = e.detail;
-    // Logic to open card modal (omitted for brevity, would be in modals.js or here)
-    // For now, let's just log
-    console.log('Open card modal', cardId);
-    document.getElementById('cardModal').classList.add('active');
-    // ... populate fields ...
+    const board = getCurrentBoard();
+    if (!board) return;
+
+    const list = board.lists.find(l => l.id === listId);
+    if (!list) return;
+
+    const card = list.cards.find(c => c.id === cardId);
+    if (!card) return;
+
+    currentEditingCard = card; // Store reference to the card being edited
+
+    cardTitleInput.value = card.title;
+    cardDescriptionInput.value = card.description;
+    cardInitialEstimateInput.value = card.initialEstimate || 0;
+    cardRemainingHoursInput.value = card.remainingHours || 0;
+    cardDueDateInput.value = card.dueDate || '';
+
+    // Render labels dynamically
+    renderLabelPicker(card.labels || []);
+
+    // TODO: Populate checklist, assignee, comments, attachments
+
+    cardModal.classList.add('active');
 });
 
-window.addEventListener('newUserNoBoards', () => {
-    const modal = document.getElementById('boardModal');
-    if (modal) {
-        modal.classList.add('active');
-        const input = document.getElementById('boardName');
-        if (input) input.value = generateUniqueProjectName();
+// Save Card
+saveCardBtn.addEventListener('click', () => {
+    if (!currentEditingCard) return;
+
+    currentEditingCard.title = cardTitleInput.value.trim();
+    currentEditingCard.description = cardDescriptionInput.value.trim();
+    currentEditingCard.initialEstimate = parseFloat(cardInitialEstimateInput.value) || 0;
+    currentEditingCard.remainingHours = parseFloat(cardRemainingHoursInput.value) || 0;
+    currentEditingCard.dueDate = cardDueDateInput.value;
+    // Labels are updated directly by renderLabelPicker event listeners
+
+    saveState();
+    renderBoard(); // Re-render board to show updated card details
+    cardModal.classList.remove('active');
+    showToast('Card updated!', 'success');
+});
+
+cancelCardBtn.addEventListener('click', () => cardModal.classList.remove('active'));
+
+// Existing newUserNoBoards and board modal logic remains...
+window.addEventListener('newUserNoBoards', () => openBoardModal());
+
+// Board Modal Elements
+const boardModal = document.getElementById('boardModal');
+const boardModalTitle = boardModal.querySelector('h2');
+const boardNameInput = document.getElementById('boardName');
+const boardGoalInput = document.getElementById('boardGoal');
+const boardStartDateInput = document.getElementById('boardStartDate');
+const boardEndDateInput = document.getElementById('boardEndDate');
+const boardColorPicker = boardModal.querySelector('.color-picker');
+const saveBoardBtn = document.getElementById('saveBoardBtn');
+const cancelBoardBtn = document.getElementById('cancelBoardBtn');
+
+let currentEditingBoardId = null; // To keep track if we're editing or creating
+
+const openBoardModal = (board = null) => {
+    boardModal.classList.add('active');
+    document.getElementById('boardSelector').classList.remove('active');
+
+    if (board) {
+        boardModalTitle.textContent = 'Edit Board';
+        boardNameInput.value = board.name;
+        boardGoalInput.value = board.goal || '';
+        boardStartDateInput.value = board.startDate || '';
+        boardEndDateInput.value = board.endDate || '';
+        currentEditingBoardId = board.id;
+
+        // Set selected color
+        boardColorPicker.querySelectorAll('.color-option').forEach(option => {
+            if (option.dataset.color === board.background) {
+                option.classList.add('selected');
+            } else {
+                option.classList.remove('selected');
+            }
+        });
+    } else {
+        boardModalTitle.textContent = 'Create New Board';
+        boardNameInput.value = generateUniqueProjectName();
+        boardGoalInput.value = '';
+        boardStartDateInput.value = '';
+        boardEndDateInput.value = '';
+        currentEditingBoardId = null;
+        boardColorPicker.querySelector('.color-option').classList.add('selected');
+    }
+};
+
+// Board Creation
+document.getElementById('createBoardBtn')?.addEventListener('click', () => openBoardModal());
+
+// New User No Boards event
+window.addEventListener('newUserNoBoards', () => openBoardModal());
+
+// Board color picker logic
+boardColorPicker.addEventListener('click', (e) => {
+    if (e.target.classList.contains('color-option')) {
+        boardColorPicker.querySelectorAll('.color-option').forEach(option => option.classList.remove('selected'));
+        e.target.classList.add('selected');
     }
 });
 
-// Board Creation
-document.getElementById('createBoardBtn')?.addEventListener('click', () => {
-    document.getElementById('boardModal').classList.add('active');
-    document.getElementById('boardSelector').classList.remove('active');
+// Save Board
+saveBoardBtn.addEventListener('click', () => {
+    const name = boardNameInput.value.trim();
+    const goal = boardGoalInput.value.trim();
+    const startDate = boardStartDateInput.value;
+    const endDate = boardEndDateInput.value;
+    const background = boardColorPicker.querySelector('.color-option.selected')?.dataset.color || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+
+    if (!name) {
+        showToast('Board name cannot be empty', 'error');
+        return;
+    }
+    if (state.currentProjectId === null) {
+        showToast('Please select or create a project first.', 'error');
+        return;
+    }
+
+    if (currentEditingBoardId) {
+        // Edit existing board
+        const boardIndex = state.boards.findIndex(b => b.id === currentEditingBoardId);
+        if (boardIndex > -1) {
+            const board = state.boards[boardIndex];
+            board.name = name;
+            board.goal = goal;
+            board.startDate = startDate;
+            board.endDate = endDate;
+            board.background = background;
+            showToast('Board updated!', 'success');
+        }
+    } else {
+        // Create new board
+        const newBoard = {
+            id: generateId(),
+            name,
+            goal,
+            startDate,
+            endDate,
+            background,
+            projectId: state.currentProjectId,
+            owner: state.currentUser ? {
+                id: state.currentUser.uid,
+                name: state.currentUser.displayName,
+                email: state.currentUser.email,
+                photoURL: state.currentUser.photoURL
+            } : { id: 'anon', name: 'Anonymous', email: 'anon@example.com', photoURL: null },
+            members: [],
+            lists: [
+                { id: generateId(), title: 'To Do', cards: [] },
+                { id: generateId(), title: 'In Progress', cards: [] },
+                { id: generateId(), title: 'Done', cards: [] }
+            ],
+            history: [],
+            inviteToken: generateInviteToken()
+        };
+        state.boards.push(newBoard);
+        state.currentBoardId = newBoard.id;
+        showToast('Board created!', 'success');
+    }
+
+    saveState();
+    renderBoard();
+    boardModal.classList.remove('active');
 });
+
+cancelBoardBtn.addEventListener('click', () => boardModal.classList.remove('active'));
 
 // Close modals
 document.querySelectorAll('.modal-close, .modal-overlay').forEach(el => {
@@ -134,3 +331,41 @@ document.querySelectorAll('.modal-close, .modal-overlay').forEach(el => {
         }
     });
 });
+
+// Function to update board info in header
+export const updateBoardInfoInHeader = () => {
+    const board = getCurrentBoard();
+    const boardInfoEl = document.getElementById('boardInfo');
+    const currentBoardGoalEl = document.getElementById('currentBoardGoal');
+    const currentBoardDatesEl = document.getElementById('currentBoardDates');
+
+    if (board && boardInfoEl) {
+        boardInfoEl.style.display = 'flex'; // Show the info section
+        currentBoardGoalEl.textContent = board.goal || 'No sprint goal set';
+
+        let datesText = '';
+        if (board.startDate && board.endDate) {
+            const start = new Date(board.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const end = new Date(board.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            datesText = `${start} - ${end}`;
+        } else if (board.startDate) {
+            const start = new Date(board.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            datesText = `Starts: ${start}`;
+        } else if (board.endDate) {
+            const end = new Date(board.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            datesText = `Ends: ${end}`;
+        }
+        currentBoardDatesEl.textContent = datesText;
+    } else if (boardInfoEl) {
+        boardInfoEl.style.display = 'none'; // Hide if no board selected
+    }
+};
+
+// Edit Board button in header
+document.getElementById('boardInfo')?.addEventListener('click', () => {
+    const board = getCurrentBoard();
+    if (board) {
+        openBoardModal(board);
+    }
+});
+
