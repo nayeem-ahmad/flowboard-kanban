@@ -1,7 +1,7 @@
 # Story 1.3: List Management
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  
