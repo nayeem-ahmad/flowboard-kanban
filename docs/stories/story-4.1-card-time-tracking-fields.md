@@ -1,7 +1,7 @@
 # Story 4.1: Card Time Tracking Fields
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** developer,  
