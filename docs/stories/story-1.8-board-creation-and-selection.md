@@ -1,7 +1,7 @@
 # Story 1.8: Board Creation and Selection
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  
