@@ -304,10 +304,18 @@ export const createCardElement = (card, listId) => {
         </div>
     ` : '';
 
+    const assignee = card.assigneeId ? project?.members.find(m => m.id === card.assigneeId) : null;
+    const assigneeHtml = assignee ? `
+        <div class="card-assignee" title="${assignee.name || assignee.email}">
+            ${assignee.photoURL ? `<img src="${assignee.photoURL}" alt="${assignee.name}">` : `<span>${(assignee.name || assignee.email).charAt(0).toUpperCase()}</span>`}
+        </div>
+    ` : '';
+
     cardEl.innerHTML = `
         ${labelsHtml}
         <div class="card-content">
             <div class="card-title-text">${card.title}</div>
+            ${assigneeHtml}
             <!-- Meta HTML omitted for brevity but should be here -->
         </div>
     `;

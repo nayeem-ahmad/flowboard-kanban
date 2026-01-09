@@ -172,7 +172,20 @@ window.addEventListener('openCardModal', (e) => {
     // Render labels dynamically
     renderLabelPicker(card.labels || []);
 
-    // TODO: Populate checklist, assignee, comments, attachments
+    // Populate Assignee Dropdown
+    const project = state.projects.find(p => p.id === state.currentProjectId);
+    if (project && cardAssigneeSelect) {
+        cardAssigneeSelect.innerHTML = '<option value="">Unassigned</option>'; // Always have unassigned option
+        project.members.forEach(member => {
+            const option = document.createElement('option');
+            option.value = member.id;
+            option.textContent = member.name || member.email;
+            cardAssigneeSelect.appendChild(option);
+        });
+        cardAssigneeSelect.value = card.assigneeId || ''; // Pre-select current assignee
+    }
+
+    // TODO: Populate checklist, comments, attachments
 
     cardModal.classList.add('active');
 });
@@ -186,6 +199,7 @@ saveCardBtn.addEventListener('click', () => {
     currentEditingCard.initialEstimate = parseFloat(cardInitialEstimateInput.value) || 0;
     currentEditingCard.remainingHours = parseFloat(cardRemainingHoursInput.value) || 0;
     currentEditingCard.dueDate = cardDueDateInput.value;
+    currentEditingCard.assigneeId = cardAssigneeSelect.value || null; // Save assignee ID
     // Labels are updated directly by renderLabelPicker event listeners
 
     saveState();

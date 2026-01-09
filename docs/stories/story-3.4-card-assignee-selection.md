@@ -1,7 +1,7 @@
 # Story 3.4: Card Assignee Selection
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  
