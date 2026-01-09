@@ -1,7 +1,7 @@
 # Story 1.6: Card Checklists
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  

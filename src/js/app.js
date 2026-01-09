@@ -188,10 +188,73 @@ window.addEventListener('openCardModal', (e) => {
 
     renderComments(card);
     renderAttachments(card);
-
-    // TODO: Populate checklist
+    renderChecklist(card);
 
     cardModal.classList.add('active');
+});
+
+// Render Checklist
+const renderChecklist = (card) => {
+    const container = document.getElementById('checklist');
+    if (!container) return;
+
+    if (!card.checklist || card.checklist.length === 0) {
+        container.innerHTML = '<div class="empty-checklist">No subtasks yet.</div>';
+        return;
+    }
+
+    container.innerHTML = card.checklist.map(item => `
+        <div class="checklist-item ${item.completed ? 'completed' : ''}">
+            <input type="checkbox" class="checklist-checkbox" data-id="${item.id}" ${item.completed ? 'checked' : ''}>
+            <span class="checklist-text">${item.text}</span>
+            <button class="btn-icon danger delete-checklist-btn" data-id="${item.id}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+    `).join('');
+
+    // Toggle Completion
+    container.querySelectorAll('.checklist-checkbox').forEach(box => {
+        box.addEventListener('change', (e) => {
+            const itemId = e.target.dataset.id;
+            const item = card.checklist.find(i => i.id === itemId);
+            if (item) {
+                item.completed = e.target.checked;
+                saveState();
+                renderChecklist(card);
+                renderBoard(); // Update progress on card tile
+            }
+        });
+    });
+
+    // Delete Item
+    container.querySelectorAll('.delete-checklist-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const itemId = btn.dataset.id;
+            card.checklist = card.checklist.filter(i => i.id !== itemId);
+            saveState();
+            renderChecklist(card);
+            renderBoard(); // Update progress on card tile
+        });
+    });
+};
+
+// Add Checklist Item
+document.getElementById('addChecklistItemBtn')?.addEventListener('click', () => {
+    const input = document.getElementById('newChecklistItem');
+    const text = input.value.trim();
+    if (text && currentEditingCard) {
+        if (!currentEditingCard.checklist) currentEditingCard.checklist = [];
+        currentEditingCard.checklist.push({
+            id: generateId(),
+            text,
+            completed: false
+        });
+        saveState();
+        renderChecklist(currentEditingCard);
+        renderBoard(); // Update progress
+        input.value = '';
+    }
 });
 
 // Render Comments
