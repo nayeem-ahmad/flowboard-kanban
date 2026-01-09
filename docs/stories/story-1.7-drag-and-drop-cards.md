@@ -1,7 +1,7 @@
 # Story 1.7: Drag and Drop Cards
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  
