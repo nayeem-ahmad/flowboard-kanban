@@ -1,7 +1,7 @@
 # Story 3.3: Team Member List and Roles
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** project owner,  

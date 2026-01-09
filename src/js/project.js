@@ -550,25 +550,33 @@ document.getElementById('addToBacklogBtn')?.addEventListener('click', () => {
 const renderTeam = (project) => {
     const listEl = document.getElementById('pmTeamList');
     listEl.innerHTML = (project.members || []).map(m => `
-        <div class="pm-team-member">
+        <div class="pm-team-member" data-id="${m.id}">
              <div class="pm-team-info">
                  <div class="user-avatar">${m.name?.[0] || 'U'}</div>
                  <div>
-                     <div>${m.name || 'User'}</div>
+                     <div>${m.name || 'User'} <span class="role-badge">${m.role || 'member'}</span></div>
                      <div style="font-size:0.8rem">${m.email}</div>
                  </div>
              </div>
-             <button class="btn-icon danger" data-id="${m.id}">Rm</button>
+             ${m.role !== 'owner' ? `<button class="btn-icon danger remove-team-member-btn" data-id="${m.id}" title="Remove Member">Rm</button>` : ''}
         </div>
     `).join('');
 
-    listEl.querySelectorAll('button').forEach(btn => {
+    listEl.querySelectorAll('.remove-team-member-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            // Remove logic...
-            if (confirm('Remove member from project?')) {
-                project.members = project.members.filter(m => m.id !== btn.dataset.id);
+            const memberId = btn.dataset.id;
+            const member = project.members.find(m => m.id === memberId);
+            
+            if (member && member.role === 'owner') {
+                showToast('Cannot remove project owner', 'error');
+                return;
+            }
+
+            if (confirm(`Remove ${member ? member.name : 'member'} from project?`)) {
+                project.members = project.members.filter(m => m.id !== memberId);
                 saveState();
                 renderTeam(project);
+                showToast('Member removed', 'success');
             }
         });
     });
@@ -576,18 +584,30 @@ const renderTeam = (project) => {
 
 // Add Project Member Btn
 document.getElementById('pmAddMemberBtn')?.addEventListener('click', () => {
-    const email = prompt('Enter email:');
-    if (email && state.currentProjectId) {
-        const project = state.projects.find(p => p.id === state.currentProjectId);
+    if (!state.currentProjectId) return;
+    const project = state.projects.find(p => p.id === state.currentProjectId);
+    
+    const email = prompt('Enter new member email:');
+    if (email && email.trim()) {
+        const name = prompt('Enter member name (optional):') || email.split('@')[0];
+        
+        // Check if already exists
+        if (project.members.some(m => m.email === email.trim())) {
+            showToast('Member already exists', 'warning');
+            return;
+        }
+
         if (!project.members) project.members = [];
         project.members.push({
             id: generateId(),
-            email,
-            name: email.split('@')[0],
-            role: 'member'
+            email: email.trim(),
+            name: name.trim(),
+            role: 'member',
+            addedAt: new Date().toISOString()
         });
         saveState();
         renderTeam(project);
+        showToast('Member added', 'success');
     }
 });
 
