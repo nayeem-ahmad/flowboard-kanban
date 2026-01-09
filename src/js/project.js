@@ -13,10 +13,17 @@ export const handleInviteLink = async () => {
 
     if (!inviteToken || !boardId) return;
 
-    try {
-        const currentUser = getCurrentUser();
-        if (!currentUser) return;
+    // Check if user is logged in
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+        // Store invite details to process after login
+        sessionStorage.setItem('pendingInvite', JSON.stringify({ inviteToken, boardId }));
+        showToast('Please sign in to join the project', 'info');
+        // Optionally open auth modal if available, or rely on user to sign in
+        return;
+    }
 
+    try {
         const doc = await db.collection('boards').doc(boardId).get();
         if (!doc.exists) {
             showToast('Board not found', 'error');

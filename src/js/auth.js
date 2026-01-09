@@ -97,6 +97,9 @@ export const initAuth = () => {
                 const bp = document.getElementById('burndownPanel');
                 if (bp) bp.style.display = '';
 
+                // Check for pending invite
+                checkPendingInvite();
+
                 // Render
                 import('./app.js').then(module => {
                     // We need to call initTheme and renderBoard. 
@@ -144,6 +147,33 @@ export const initAuth = () => {
 
     setupAuthListeners();
     setupProfileListeners();
+};
+
+const checkPendingInvite = () => {
+    const pendingInvite = sessionStorage.getItem('pendingInvite');
+    if (pendingInvite) {
+        try {
+            const { inviteToken, boardId } = JSON.parse(pendingInvite);
+            // Construct URL for handleInviteLink to parse, or just dispatch event 
+            // since handleInviteLink reads from window.location.search.
+            // We need to update the URL history so handleInviteLink sees it?
+            // Actually handleInviteLink reads search params. If we are redirected back from auth,
+            // the params might be lost if we didn't preserve them in auth flow.
+            // But here we are just restoring state. 
+            // Better strategy: update window.history to include the params so handleInviteLink works as designed.
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('invite', inviteToken);
+            newUrl.searchParams.set('board', boardId);
+            window.history.replaceState({}, '', newUrl);
+            
+            // Trigger the handler
+            window.dispatchEvent(new CustomEvent('checkInviteLink'));
+            
+            sessionStorage.removeItem('pendingInvite');
+        } catch (e) {
+            console.error('Error parsing pending invite', e);
+        }
+    }
 };
 
 const setupProfileListeners = () => {

@@ -1,7 +1,7 @@
 # Story 3.2: Joining via Invite Link
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** team member,  

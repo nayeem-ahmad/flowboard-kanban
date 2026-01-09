@@ -1,7 +1,7 @@
 # Story 3.1: Team Member Invites
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** project owner,  
