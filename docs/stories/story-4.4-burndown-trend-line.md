@@ -1,7 +1,7 @@
 # Story 4.4: Burndown Trend Line
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** scrum master,  

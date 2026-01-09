@@ -414,8 +414,13 @@ export const updateBurndownChart = () => {
     const board = getCurrentBoard();
     if (!board) return;
 
+    // Calculate totals
+    let totalInitial = 0;
     let totalRemaining = 0;
-    board.lists.forEach(list => list.cards.forEach(card => totalRemaining += (card.remainingHours || 0)));
+    board.lists.forEach(list => list.cards.forEach(card => {
+        totalInitial += (card.initialEstimate || 0);
+        totalRemaining += (card.remainingHours || 0);
+    }));
 
     const totalEl = document.getElementById('totalRemainingValue');
     if (totalEl) totalEl.textContent = `${totalRemaining} h`;
@@ -423,6 +428,7 @@ export const updateBurndownChart = () => {
     const today = new Date().toISOString().split('T')[0];
     if (!board.history) board.history = [];
 
+    // Update history for today
     const todayEntry = board.history.find(h => h.date === today);
     if (todayEntry) todayEntry.remaining = totalRemaining;
     else board.history.push({ date: today, remaining: totalRemaining });
@@ -435,21 +441,97 @@ export const updateBurndownChart = () => {
     if (burndownChart) burndownChart.destroy();
     if (typeof Chart === 'undefined') return;
 
+    // Calculate Date Range
+    let startDate = board.startDate ? new Date(board.startDate) : new Date(board.history[0]?.date || Date.now());
+    let endDate = board.endDate ? new Date(board.endDate) : new Date(Date.now() + 14 * 86400000);
+
+    // If history starts before start date, adjust start (or just rely on chart labels)
+    // Generate labels for every day in the sprint
+    const labels = [];
+    const idealData = [];
+    const actualDataMap = new Map(board.history.map(h => [h.date, h.remaining]));
+    const actualData = [];
+
+    // Helper to format date
+    const formatDate = (d) => d.toISOString().split('T')[0];
+    const displayDate = (d) => `${d.getDate()}/${d.getMonth() + 1}`;
+
+    const totalDuration = (endDate - startDate) / (1000 * 60 * 60 * 24);
+    const burnRate = totalInitial / totalDuration;
+
+    let currentDate = new Date(startDate);
+    let dayCount = 0;
+
+    while (currentDate <= endDate) {
+        const dateStr = formatDate(currentDate);
+        labels.push(displayDate(currentDate));
+
+        // Ideal Line
+        let ideal = totalInitial - (burnRate * dayCount);
+        if (ideal < 0) ideal = 0;
+        idealData.push(ideal);
+
+        // Actual Line
+        // We only plot actual data up to "today" or available history
+        if (currentDate <= new Date()) {
+             // Find nearest history entry if exact date missing? 
+             // For simple logic, we use exact match or null (gap in line)
+             // Better: use last known value if missing (step line), but line chart interpolates.
+             // If we want to show gaps, push null. If we want continuous, logic is complex.
+             // Let's use exact match from history or undefined (ChartJS handles gaps)
+             // However, to show a line up to today, we need points.
+             // We can check actualDataMap
+             if (actualDataMap.has(dateStr)) {
+                 actualData.push(actualDataMap.get(dateStr));
+             } else {
+                 // If it's in the past but no record, maybe don't plot?
+                 // Or fill forward? Let's leave gap for now or better, fill forward from previous
+                 if (actualData.length > 0) actualData.push(actualData[actualData.length -1]); // Fill forward
+                 else actualData.push(null);
+             }
+        }
+
+        currentDate.setDate(currentDate.getDate() + 1);
+        dayCount++;
+    }
+
     burndownChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: board.history.map(h => {
-                const d = new Date(h.date);
-                return `${d.getDate()}/${d.getMonth() + 1}`;
-            }),
-            datasets: [{
-                label: 'Remaining',
-                data: board.history.map(h => h.remaining),
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                fill: true
-            }]
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Actual Remaining',
+                    data: actualData,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.1,
+                    spanGaps: true // Connect points if gaps
+                },
+                {
+                    label: 'Ideal Burndown',
+                    data: idealData,
+                    borderColor: '#9ca3af',
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0
+                }
+            ]
         },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Hours' }
+                }
+            }
+        }
     });
 };
