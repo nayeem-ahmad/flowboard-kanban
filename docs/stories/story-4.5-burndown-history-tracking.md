@@ -1,7 +1,7 @@
 # Story 4.5: Burndown History Tracking
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** system,  
