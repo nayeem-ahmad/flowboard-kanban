@@ -1,7 +1,7 @@
 # Story 3.5: Card Comments
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** team member,  

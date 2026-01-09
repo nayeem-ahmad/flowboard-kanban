@@ -311,12 +311,22 @@ export const createCardElement = (card, listId) => {
         </div>
     ` : '';
 
+    const commentCount = card.comments?.length || 0;
+    const commentsHtml = commentCount > 0 ? `
+        <div class="card-badge" title="${commentCount} comments">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            ${commentCount}
+        </div>
+    ` : '';
+
     cardEl.innerHTML = `
         ${labelsHtml}
         <div class="card-content">
             <div class="card-title-text">${card.title}</div>
-            ${assigneeHtml}
-            <!-- Meta HTML omitted for brevity but should be here -->
+            <div class="card-meta">
+                ${commentsHtml}
+                ${assigneeHtml}
+            </div>
         </div>
     `;
 

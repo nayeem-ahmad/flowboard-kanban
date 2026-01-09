@@ -185,9 +185,55 @@ window.addEventListener('openCardModal', (e) => {
         cardAssigneeSelect.value = card.assigneeId || ''; // Pre-select current assignee
     }
 
-    // TODO: Populate checklist, comments, attachments
+    renderComments(card);
+
+    // TODO: Populate checklist, attachments
 
     cardModal.classList.add('active');
+});
+
+// Render Comments
+const renderComments = (card) => {
+    const container = document.getElementById('cardCommentsList');
+    if (!container) return;
+
+    if (!card.comments || card.comments.length === 0) {
+        container.innerHTML = '<div class="empty-comments">No comments yet.</div>';
+        return;
+    }
+
+    container.innerHTML = card.comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(comment => `
+        <div class="comment-item">
+            <div class="comment-header">
+                <span class="comment-author">${comment.authorName}</span>
+                <span class="comment-date">${new Date(comment.createdAt).toLocaleString()}</span>
+            </div>
+            <div class="comment-content">${comment.text}</div>
+        </div>
+    `).join('');
+};
+
+// Add Comment Logic
+document.getElementById('addCommentBtn')?.addEventListener('click', () => {
+    const input = document.getElementById('newCommentInput');
+    const text = input.value.trim();
+    if (!text || !currentEditingCard) return;
+
+    const user = getCurrentUser();
+    const newComment = {
+        id: generateId(),
+        text,
+        authorId: user ? user.uid : 'anon',
+        authorName: user ? (user.displayName || user.email) : 'Anonymous',
+        createdAt: new Date().toISOString()
+    };
+
+    if (!currentEditingCard.comments) currentEditingCard.comments = [];
+    currentEditingCard.comments.push(newComment);
+
+    saveState();
+    renderComments(currentEditingCard);
+    input.value = '';
 });
 
 // Save Card
