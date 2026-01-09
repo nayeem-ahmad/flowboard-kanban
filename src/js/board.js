@@ -99,15 +99,20 @@ export const updateSelectorTexts = () => {
 // ================================
 // LIST ELEMENT
 // ================================
+const calculateListTotals = (list) => {
+    return {
+        initial: list.cards.reduce((sum, card) => sum + (card.initialEstimate || 0), 0),
+        remaining: list.cards.reduce((sum, card) => sum + (card.remainingHours || 0), 0)
+    };
+};
+
 export const createListElement = (list) => {
     const board = getCurrentBoard();
     const listEl = document.createElement('div');
     listEl.className = 'list';
     listEl.dataset.listId = list.id;
 
-    // Calculate totals
-    const totalInitialEstimate = list.cards.reduce((sum, card) => sum + (card.initialEstimate || 0), 0);
-    const totalRemainingHours = list.cards.reduce((sum, card) => sum + (card.remainingHours || 0), 0);
+    const totals = calculateListTotals(list);
 
     listEl.innerHTML = `
         <div class="list-header">
@@ -115,11 +120,11 @@ export const createListElement = (list) => {
             <div class="list-badges">
                 <span class="list-hour-badge estimate" title="Total Initial Estimate">
                     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    ${totalInitialEstimate}h
+                    ${totals.initial}h
                 </span>
                 <span class="list-hour-badge remaining" title="Total Remaining Hours">
                     <svg viewBox="0 0 24 24" fill="none"><path d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    ${totalRemainingHours}h
+                    ${totals.remaining}h
                 </span>
                 <span class="list-count">${list.cards.length}</span>
             </div>

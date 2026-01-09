@@ -1,7 +1,7 @@
 # Story 4.2: List Hour Totals
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** scrum master,  
