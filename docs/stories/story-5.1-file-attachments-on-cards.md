@@ -1,7 +1,7 @@
 # Story 5.1: File Attachments on Cards
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  

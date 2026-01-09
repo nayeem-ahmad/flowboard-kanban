@@ -1,7 +1,8 @@
 import { initAuth } from './auth.js';
 import { renderBoard } from './board.js';
-import { state, saveState, getOrCreateInviteToken, generateInviteToken, getCurrentBoard } from './store.js';
-import { showToast, generateUniqueProjectName } from './utils.js';
+import { state, saveState, getOrCreateInviteToken, generateInviteToken, getCurrentBoard, getCurrentUser } from './store.js';
+import { showToast, generateUniqueProjectName, generateId } from './utils.js';
+import { storage } from './config.js';
 import './project.js'; // Import project logic/listeners
 
 console.log('App initialization...');
@@ -186,8 +187,9 @@ window.addEventListener('openCardModal', (e) => {
     }
 
     renderComments(card);
+    renderAttachments(card);
 
-    // TODO: Populate checklist, attachments
+    // TODO: Populate checklist
 
     cardModal.classList.add('active');
 });
@@ -212,6 +214,126 @@ const renderComments = (card) => {
         </div>
     `).join('');
 };
+
+// Render Attachments
+const renderAttachments = (card) => {
+    const container = document.getElementById('cardAttachmentsList');
+    if (!container) return;
+
+    if (!card.attachments || card.attachments.length === 0) {
+        container.innerHTML = '<div class="empty-attachments">No attachments yet.</div>';
+        return;
+    }
+
+    container.innerHTML = card.attachments.map(att => `
+        <div class="attachment-item">
+            <div class="attachment-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+            </div>
+            <div class="attachment-info">
+                <a href="${att.url}" target="_blank" class="attachment-name">${att.name}</a>
+                <span class="attachment-meta">${new Date(att.uploadedAt).toLocaleDateString()}</span>
+            </div>
+            <button class="btn-icon danger delete-attachment-btn" data-id="${att.id}" title="Delete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+        </div>
+    `).join('');
+
+    // Attach delete listeners
+    container.querySelectorAll('.delete-attachment-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (confirm('Delete this attachment?')) {
+                const attId = btn.dataset.id;
+                const attIndex = card.attachments.findIndex(a => a.id === attId);
+                if (attIndex > -1) {
+                    const att = card.attachments[attIndex];
+                    try {
+                        // Create a reference to the file to delete
+                        const fileRef = storage.refFromURL(att.url);
+                        await fileRef.delete();
+                        
+                        // Remove from state
+                        card.attachments.splice(attIndex, 1);
+                        saveState();
+                        renderAttachments(card);
+                        renderBoard(); // Update board to show/hide icon
+                        showToast('Attachment deleted', 'success');
+                    } catch (error) {
+                        console.error('Error deleting file:', error);
+                        showToast('Failed to delete file', 'error');
+                    }
+                }
+            }
+        });
+    });
+};
+
+// Upload Attachment Logic
+const attachmentInput = document.getElementById('cardAttachmentInput');
+const progressBar = document.getElementById('attachmentProgressBar');
+const progressContainer = document.getElementById('attachmentProgressContainer');
+
+attachmentInput?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file || !currentEditingCard) return;
+
+    if (!storage) {
+        showToast('Storage not configured', 'error');
+        return;
+    }
+
+    const board = getCurrentBoard();
+    const storagePath = `attachments/${board.id}/${currentEditingCard.id}/${Date.now()}_${file.name}`;
+    const storageRef = storage.ref(storagePath);
+    const uploadTask = storageRef.put(file);
+
+    progressContainer.classList.remove('hidden');
+    progressBar.style.width = '0%';
+
+    uploadTask.on('state_changed', 
+        (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            progressBar.style.width = `${progress}%`;
+        }, 
+        (error) => {
+            console.error('Upload error:', error);
+            progressContainer.classList.add('hidden');
+            showToast('Upload failed', 'error');
+            attachmentInput.value = '';
+        }, 
+        async () => {
+            try {
+                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                const user = getCurrentUser();
+                
+                const newAttachment = {
+                    id: generateId(),
+                    name: file.name,
+                    url: downloadURL,
+                    type: file.type,
+                    size: file.size,
+                    uploadedAt: new Date().toISOString(),
+                    uploadedBy: user ? user.uid : 'anon'
+                };
+
+                if (!currentEditingCard.attachments) currentEditingCard.attachments = [];
+                currentEditingCard.attachments.push(newAttachment);
+
+                saveState();
+                renderAttachments(currentEditingCard);
+                renderBoard(); // Update board view to show icon
+                
+                progressContainer.classList.add('hidden');
+                attachmentInput.value = '';
+                showToast('File uploaded successfully', 'success');
+            } catch (error) {
+                console.error('Error saving attachment metadata:', error);
+                showToast('Upload succeeded but failed to save metadata', 'warning');
+            }
+        }
+    );
+});
 
 // Add Comment Logic
 document.getElementById('addCommentBtn')?.addEventListener('click', () => {
