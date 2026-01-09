@@ -598,4 +598,54 @@ export const updateBurndownChart = () => {
             }
         }
     });
+
+    // Panel Logic (Collapse/Expand & Drag)
+    const panel = document.getElementById('burndownPanel');
+    const header = document.getElementById('burndownHeader');
+    const toggleBtn = header.querySelector('.burndown-toggle');
+
+    // Toggle Collapse
+    // Check if listener already attached to avoid duplicates? 
+    // Re-rendering board calls updateBurndownChart, so we should be careful.
+    // Ideally this logic should be in a separate init function or check if initialized.
+    // For simplicity in this structure, we'll clone/replace or just ensure we don't duplicate.
+    // A simple way is to assign onclick directly or check a flag.
+    toggleBtn.onclick = (e) => {
+        e.stopPropagation();
+        panel.classList.toggle('collapsed');
+        // Rotate icon
+        toggleBtn.style.transform = panel.classList.contains('collapsed') ? 'rotate(180deg)' : 'rotate(0deg)';
+    };
+
+    // Drag Logic
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+
+    header.onmousedown = (e) => {
+        initialX = e.clientX - xOffset;
+        initialY = e.clientY - yOffset;
+        if (e.target === header || header.contains(e.target)) {
+            isDragging = true;
+        }
+    };
+
+    document.onmouseup = () => {
+        isDragging = false;
+    };
+
+    document.onmousemove = (e) => {
+        if (isDragging) {
+            e.preventDefault();
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+            xOffset = currentX;
+            yOffset = currentY;
+            panel.style.transform = `translate(${currentX}px, ${currentY}px)`;
+        }
+    };
 };

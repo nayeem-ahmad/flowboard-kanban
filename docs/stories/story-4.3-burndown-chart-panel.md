@@ -1,7 +1,7 @@
 # Story 4.3: Burndown Chart Panel
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** scrum master,  
