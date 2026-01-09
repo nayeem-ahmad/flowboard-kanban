@@ -1,7 +1,7 @@
 # Story 1.2: Basic Board Display and Theme
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  
