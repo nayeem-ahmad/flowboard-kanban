@@ -1,7 +1,7 @@
 # Story 1.5: Card Labels and Due Dates
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  

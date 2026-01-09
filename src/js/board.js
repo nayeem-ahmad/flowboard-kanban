@@ -321,11 +321,36 @@ export const createCardElement = (card, listId) => {
         </div>
     ` : '';
 
+    let dueDateHtml = '';
+    if (card.dueDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const due = new Date(card.dueDate);
+        due.setHours(0, 0, 0, 0);
+        
+        let dateClass = 'card-date';
+        const diffTime = due - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) dateClass += ' overdue';
+        else if (diffDays <= 2 && diffDays >= 0) dateClass += ' upcoming';
+
+        const dateIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+        
+        dueDateHtml = `
+            <div class="${dateClass}" title="Due: ${card.dueDate}">
+                ${dateIcon}
+                ${due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </div>
+        `;
+    }
+
     cardEl.innerHTML = `
         ${labelsHtml}
         <div class="card-content">
             <div class="card-title-text">${card.title}</div>
             <div class="card-meta">
+                ${dueDateHtml}
                 ${commentsHtml}
                 ${attachmentsHtml}
                 ${assigneeHtml}
