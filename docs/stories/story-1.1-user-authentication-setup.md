@@ -1,7 +1,7 @@
 # Story 1.1: User Authentication Setup
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  

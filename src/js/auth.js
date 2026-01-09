@@ -270,6 +270,30 @@ const setupProfileListeners = () => {
     });
 };
 
+// Helper for friendly error messages
+const getFriendlyErrorMessage = (error) => {
+    switch (error.code) {
+        case 'auth/invalid-email':
+            return 'Invalid email address format.';
+        case 'auth/user-disabled':
+            return 'This user account has been disabled.';
+        case 'auth/user-not-found':
+            return 'No account found with this email.';
+        case 'auth/wrong-password':
+            return 'Incorrect password.';
+        case 'auth/email-already-in-use':
+            return 'Email is already registered.';
+        case 'auth/weak-password':
+            return 'Password should be at least 6 characters.';
+        case 'auth/operation-not-allowed':
+            return 'Operation not allowed.';
+        case 'auth/popup-closed-by-user':
+            return 'Sign-in popup closed before completion.';
+        default:
+            return error.message || 'An unknown error occurred.';
+    }
+};
+
 const setupAuthListeners = () => {
     // Login
     loginForm?.addEventListener('submit', async (e) => {
@@ -289,7 +313,7 @@ const setupAuthListeners = () => {
             showToast('Welcome back!', 'success');
         } catch (error) {
             console.error('Login error:', error);
-            showToast('Failed to sign in', 'error');
+            showToast(getFriendlyErrorMessage(error), 'error');
         } finally {
             setFormLoading(loginForm, false);
         }
@@ -312,7 +336,7 @@ const setupAuthListeners = () => {
             showToast('Account created successfully!', 'success');
         } catch (error) {
             console.error('Registration error:', error);
-            showToast('Failed to create account', 'error');
+            showToast(getFriendlyErrorMessage(error), 'error');
         } finally {
             setFormLoading(registerForm, false);
         }
@@ -329,7 +353,7 @@ const setupAuthListeners = () => {
             showToast('Password reset email sent!', 'success');
             document.getElementById('backToLoginLink').click();
         } catch (error) {
-            showToast('Failed to send reset email', 'error');
+            showToast(getFriendlyErrorMessage(error), 'error');
         } finally {
             setFormLoading(resetForm, false);
         }
