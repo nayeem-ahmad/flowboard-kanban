@@ -713,6 +713,10 @@ const originalOpenCardModal = window.dispatchEvent;
 // For now, let's export it and call it from initAuth in auth.js if possible, or listen for a custom event.
 window.addEventListener('appReady', checkCardInURL);
 
+window.addEventListener('createBoardRequest', () => {
+    openBoardModal();
+});
+
 // Edit Board button in header
 document.getElementById('boardInfo')?.addEventListener('click', () => {
     const board = getCurrentBoard();

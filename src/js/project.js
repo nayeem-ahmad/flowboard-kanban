@@ -264,10 +264,41 @@ const renderProjectDetails = () => {
 
     document.getElementById('pmNoProjectSelected').classList.add('hidden');
     document.getElementById('pmProjectDetails').classList.remove('hidden');
-    document.getElementById('pmProjectName').textContent = project.name;
+    
+    // Project Name and Description Editing
+    const nameEl = document.getElementById('pmProjectName');
+    const descContainer = document.getElementById('pmProjectDescription'); // Ensure this element exists in HTML or create it dynamically
+    // If not in HTML, let's inject it or assume we need to add it to the structure.
+    // Looking at index.html, we only have pmProjectName. Let's make the edit button toggle a form.
+    
+    // Re-render header to include description input
+    const headerEl = document.querySelector('.pm-header .pm-title-section');
+    headerEl.innerHTML = `
+        <div class="project-edit-group">
+            <input type="text" id="editProjectName" value="${project.name}" class="form-input project-name-input" />
+            <textarea id="editProjectDesc" class="form-input project-desc-input" placeholder="Project Description" rows="2">${project.description || ''}</textarea>
+        </div>
+        <button class="btn btn-primary" id="saveProjectDetailsBtn">Save</button>
+    `;
+
+    // Save Listener
+    document.getElementById('saveProjectDetailsBtn').addEventListener('click', () => {
+        const newName = document.getElementById('editProjectName').value.trim();
+        const newDesc = document.getElementById('editProjectDesc').value.trim();
+        
+        if (newName) {
+            project.name = newName;
+            project.description = newDesc;
+            saveState();
+            renderProjectManagement(); // Update list
+            showToast('Project details updated', 'success');
+        } else {
+            showToast('Project name cannot be empty', 'error');
+        }
+    });
 
     // Tabs
-    const activeTab = document.querySelector('.pm-tab.active')?.dataset.tab || 'sprints'; // Default to sprints? Or 'backlog'?
+    const activeTab = document.querySelector('.pm-tab.active')?.dataset.tab || 'sprints'; 
     renderProjectTab(activeTab);
 };
 
@@ -316,7 +347,7 @@ const renderLabels = (project) => {
                     <span class="label-color-preview" style="background-color: ${label.color};"></span>
                     <span class="label-name">${label.name}</span>
                     <button class="btn-icon edit-label-btn" data-id="${label.id}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     </button>
                     <button class="btn-icon danger delete-label-btn" data-id="${label.id}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
@@ -389,6 +420,7 @@ const renderSprints = (project) => {
         </div>
     `).join('');
 
+    // Switch to Sprint
     listEl.querySelectorAll('.pm-sprint-item').forEach(el => {
         el.addEventListener('click', () => {
             state.currentBoardId = el.dataset.id;
@@ -401,6 +433,14 @@ const renderSprints = (project) => {
             if (bp) bp.style.display = '';
         });
     });
+
+    // Create Sprint Logic
+    document.getElementById('pmCreateSprintBtn').onclick = () => {
+        // We can reuse openBoardModal from app.js if we can access it.
+        // Since we are in project.js module, we can't easily access app.js functions directly if they aren't exported.
+        // Best approach: Dispatch event 'createBoard' which app.js listens to.
+        window.dispatchEvent(new CustomEvent('createBoardRequest'));
+    };
 };
 
 const renderBacklog = (project) => {

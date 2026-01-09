@@ -1,7 +1,7 @@
 # Story 2.2: Project Management Screen
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  
