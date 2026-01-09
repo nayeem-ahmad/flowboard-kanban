@@ -1,7 +1,7 @@
 # Story 2.1: Project Entity and Selector
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** user,  

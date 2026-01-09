@@ -39,18 +39,32 @@ document.addEventListener('click', (e) => {
 const renderHeaderProjectList = () => {
     const list = document.getElementById('projectList');
     if (!list) return;
-    list.innerHTML = state.projects.map(p => `
+    
+    // Render existing projects
+    const projectsHtml = state.projects.map(p => `
         <button class="board-list-item ${p.id === state.currentProjectId ? 'active' : ''}" data-id="${p.id}">
             <div class="board-color-dot" style="background: var(--accent-primary)"></div>
             <span class="board-item-name">${p.name}</span>
         </button>
     `).join('');
 
+    // Add "Create New Project" button
+    const createBtnHtml = `
+        <div class="dropdown-divider"></div>
+        <button class="create-board-btn" id="headerCreateProjectBtn">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Create new project
+        </button>
+    `;
+
+    list.innerHTML = projectsHtml + createBtnHtml;
+
+    // Attach listeners to project items
     list.querySelectorAll('.board-list-item').forEach(btn => {
         btn.addEventListener('click', () => {
             if (btn.dataset.id !== state.currentProjectId) {
                 state.currentProjectId = btn.dataset.id;
-                // Switch to first board of project
+                // Switch to first board of project or clear if none
                 const boards = state.boards.filter(b => b.projectId === state.currentProjectId);
                 state.currentBoardId = boards.length ? boards[0].id : null;
                 saveState();
@@ -58,6 +72,30 @@ const renderHeaderProjectList = () => {
             }
             document.getElementById('projectSelector').classList.remove('active');
         });
+    });
+
+    // Attach listener to Create Project button
+    document.getElementById('headerCreateProjectBtn')?.addEventListener('click', () => {
+        const name = prompt('Enter project name:');
+        if (name) {
+            const newProject = {
+                id: generateId(),
+                name,
+                description: '',
+                ownerId: state.currentUser ? state.currentUser.uid : 'anon',
+                members: [],
+                backlog: [],
+                sprintIds: [],
+                labels: [] // Initialize with defaults if needed
+            };
+            state.projects.push(newProject);
+            state.currentProjectId = newProject.id;
+            state.currentBoardId = null; // New project has no boards
+            saveState();
+            renderBoard(); // Will show empty state
+            showToast('Project created', 'success');
+        }
+        document.getElementById('projectSelector').classList.remove('active');
     });
 };
 
